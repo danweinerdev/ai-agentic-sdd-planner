@@ -126,7 +126,7 @@ Never use "pre-existing" to justify deferring or hiding a finding. "Pre-existing
 - Update completed task statuses to `complete`
 - Check off subtask checklists (`- [x]`) in the phase doc
 - Update the `updated` date in the phase frontmatter
-- Present non-critical findings summary to user
+- Present non-critical findings summary to user using the `shared/templates/per-task-findings.md` template — render once per task with the scanner's table and your recommendation. Keeping the structure consistent across tasks lets the user compare findings at a glance.
 - Ask user for decisions on any findings requiring human judgment
 - Proceed to next wave
 
@@ -204,6 +204,7 @@ Code changes go to the target repository (not the planning root).
 ## Context
 - Orchestration: `shared/orchestration.md`
 - Schema: `shared/frontmatter-schema.md`
+- Per-task findings template: `shared/templates/per-task-findings.md`
 - Target plan: `Plans/Ready/<PlanName>/` or `Plans/Active/<PlanName>/`
 - Related specs: `Specs/`
 - Related designs: `Designs/`
