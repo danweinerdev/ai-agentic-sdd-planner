@@ -111,7 +111,8 @@ Before launching each wave, check whether two or more tasks in the same wave mig
 
 **c. Review completed tasks**
 - For each successfully completed task, dispatch `sdd-planner:quality-scanner` via the Task tool (use the plugin-namespaced name — bare `quality-scanner` will not resolve)
-- Scope the review to that task's changes — pass the target repo path, the file list, and the commit range from the implementer's report
+- Render the dispatch prompt from `shared/templates/quality-scan-prompt.md`. The template handles the boilerplate framing (intent-blind framing, scope, output table); your job per-dispatch is to fill in `FOCUS_LIST` — a 4–8 item curated list of risk areas in this specific diff. That is where the orchestrator's judgment lives.
+- Scope the review to that task's changes — pass the target repo path, the file list, and the commit range from the implementer's report via the template's placeholders
 - The scanner evaluates the code intent-blind: correctness, safety, maintainability, testing, over-engineering
 - Do **not** pass plan/spec/design context — `quality-scanner` is deliberately intent-blind, and the full orchestrated `/code-review` at end-of-phase covers the plan/spec/design perspective
 
@@ -205,6 +206,7 @@ Code changes go to the target repository (not the planning root).
 - Orchestration: `shared/orchestration.md`
 - Schema: `shared/frontmatter-schema.md`
 - Per-task findings template: `shared/templates/per-task-findings.md`
+- Quality-scanner dispatch template: `shared/templates/quality-scan-prompt.md`
 - Target plan: `Plans/Ready/<PlanName>/` or `Plans/Active/<PlanName>/`
 - Related specs: `Specs/`
 - Related designs: `Designs/`
