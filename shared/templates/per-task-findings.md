@@ -22,9 +22,11 @@ Placeholder reference:
 - FINDINGS_TABLE_ROWS
                      — one row per finding, lifted verbatim from the
                        quality-scanner output's table; preserve order.
-                       Severity vocabulary: Critical / Major / Minor / Question
-                       Lens vocabulary: Correctness / Safety / Maintainability /
-                                        Testing / Over-Engineering
+                       Severity and lens vocabulary are defined in
+                       `shared/templates/quality-scan-output-format.md`
+                       (Critical / Major / Minor / Question;
+                       Correctness / Safety / Maintainability /
+                       Testing / Over-Engineering).
 - QUESTIONS_SECTION  — optional. If the scanner raised questions or
                        unverified suspicions, render them here as:
                            **Questions raised:** ...
