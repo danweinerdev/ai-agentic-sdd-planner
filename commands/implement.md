@@ -56,15 +56,31 @@ Scan the phase's `tasks[]` array and separate tasks into two lists:
 - **Ready**: tasks that have a non-empty `verification` field with specific, observable criteria
 - **Missing verification**: tasks where `verification` is absent, empty, or vague (e.g., "works correctly", "done", "it works")
 
-**If all tasks are ready** — proceed to step 5.
+#### Forward-reference audit
 
-**If any tasks are missing verification** — present the list to the user:
+For every task that DOES have verification, also scan its verification text for **forward references** — backtick-quoted identifiers (types, functions, concepts) that don't exist yet in the target codebase and aren't defined in earlier phases of this plan.
+
+A forward reference looks like a verification clause that names a symbol introduced by a later phase. Example: a Phase 2 task whose verification says "tests cover: pre-existing **OnDemand** started service is rolled back" — when `OnDemand` is introduced in Phase 3. The task can't be fully verified at Phase 2 implementation time without a test-only seam or a deferred test.
+
+The check:
+
+1. **Extract candidate identifiers** from each verification field — backtick-quoted symbols (e.g., `OnDemand`, `start_service`, `DependencyState`), and capitalized type-like names if they're not already standard library types.
+2. **For each candidate, check three places:**
+   - The target codebase: use `Grep` for the literal symbol (rough — you're looking for "does this exist anywhere yet?"). If found, it's not a forward reference.
+   - Earlier phase docs in this plan (`<NN>-*.md` files with phase number ≤ current). If a phase ≤ N defines it, it's not a forward reference.
+   - This phase's own frontmatter or body. If this phase introduces it, it's not a forward reference.
+3. **If a candidate is found ONLY in a later phase doc** (`<NN>-*.md` with phase number > current), or NOT found anywhere in the plan or codebase, treat it as a forward reference.
+
+This is a heuristic, not a parser. Capitalized words like `Result`, `String`, `Vec`, `HashMap`, `Option` (and language-standard equivalents) are not forward references — skip them. When ambiguous, lean toward flagging — false positives the user can dismiss in 5 seconds; false negatives create implementation-time test seams.
+
+**If all tasks are ready and no forward references are found** — proceed to step 5.
+
+**If any tasks are missing verification OR have forward references** — present the combined list to the user:
 
 ```
-## Verification Criteria Missing
+## Verification Issues
 
-The following tasks do not have verification criteria — there's no defined
-way to know when the work is good and complete:
+### Missing verification (no defined criteria)
 
 - **1.2: Add user authentication** — no `verification` field
 - **1.4: Set up logging** — no `verification` field
@@ -72,14 +88,24 @@ way to know when the work is good and complete:
 Each task needs a specific answer to "how do we know this is done?"
 Examples: "login returns a JWT and refresh flow works", "logs appear
 in CloudWatch within 5s of a request"
+
+### Forward references (verification names symbols defined in later phases)
+
+- **2.3: Registry-wide rollback** — verification mentions `OnDemand`, defined in phase 3
+- **2.3: Registry-wide rollback** — verification mentions `start_service`, defined in phase 3
+
+Forward references force implementation-time compromises (test-only
+seams, deferred tests). Either reword the verification to be self-
+contained at this phase, or document the seam explicitly in the phase
+doc with a marker like "(Phase N+1: <symbol> not yet introduced)".
 ```
 
 Then ask the user to choose:
-1. **Add criteria now** — pause and add `verification` to each flagged task before continuing
-2. **Proceed anyway** — acknowledge the gap and implement without verification gates for those tasks
+1. **Fix now** — pause and update verification fields (add criteria for missing; reword or annotate forward references) before continuing
+2. **Proceed anyway** — acknowledge the issues and implement; for forward references, the implementer may need to insert test-only seams documented in the phase doc
 3. **Abort** — stop implementation to fix the plan first
 
-If the user chooses option 1, update each task's `verification` field in the phase frontmatter, then proceed. If the user chooses option 2, proceed but include a warning in the wave summary for each task that lacked verification. If the user chooses option 3, stop.
+If the user chooses option 1, update each task's `verification` field, then proceed. If the user chooses option 2, proceed but include a warning in the wave summary for each affected task — and where forward references force a test-only seam, the implementer's report and the eventual debrief should call that seam out explicitly. If the user chooses option 3, stop.
 
 ### 5. Build Dependency Graph & Execute in Waves
 
