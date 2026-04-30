@@ -14,17 +14,16 @@ Run **intent-blind**. Do not read any plan, spec, design, research, or debrief a
 {{FOCUS_LIST}}
 
 ## Output
-Use this exact table shape:
+
+Render as a markdown table — `/implement`'s per-task-findings rendering needs the compact shape:
 
 | # | Severity | Lens | Location (file:line) | Finding |
 
-Severities: **Critical** (must-fix before this task is accepted), **Major**, **Minor**, **Question**.
+Each Finding cell contains the concrete defect plus the validation evidence (what you read/ran to confirm it).
 
-Lenses: **Correctness**, **Safety**, **Maintainability**, **Testing**, **Over-Engineering**.
+Severity vocabulary, lens vocabulary, validation discipline, and the recommendation block are defined in `shared/templates/quality-scan-output-format.md`. Read that file once and follow it. The summary: severities are **Critical / Major / Minor / Question**; lenses are **Correctness / Safety / Maintainability / Testing / Over-Engineering**; if you can't validate a finding, downgrade to Question rather than reporting a defect.
 
 After the table, give a one-paragraph **Recommendation** (block / fix-then-accept / accept-with-followups / accept).
-
-Validate every finding against the actual diff and the surrounding file context, not just the diff hunk. Diffs lie by omission — read the full file when a hunk's context isn't sufficient.
 
 Do not include any plan-aware reasoning. Do not say "this matches the spec" or "this satisfies the verification" — you don't have the spec.
 

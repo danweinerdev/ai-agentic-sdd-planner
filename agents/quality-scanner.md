@@ -41,6 +41,8 @@ You are **not** given plans, specs, or designs. If the caller accidentally passe
 
 ## Validation Requirement (non-negotiable)
 
+The canonical validation discipline is defined in `shared/templates/quality-scan-output-format.md`. Read it before producing findings. The summary, with the prose this agent has historically used:
+
 **Diffs lie by omission.** A patch hunk shows you the delta, not the code. Before writing any finding, verify it against the actual files:
 
 - **Read the full file.** The hunk may be surrounded by code that already addresses your concern.
@@ -90,6 +92,8 @@ If after validation you still can't confirm a finding, downgrade it to a **Quest
 
 ## Output Format
 
+Severity vocabulary, lens vocabulary, and the rule that every finding must cite location + concrete description + validation evidence are defined in `shared/templates/quality-scan-output-format.md`. The shape below is this agent's default, used when invoked by `/code-review` (which consumes the sectioned form during its four-lane synthesis). When invoked by `/implement` via `shared/templates/quality-scan-prompt.md`, the dispatch overrides this with a compact table — both shapes use the same vocabulary.
+
 ```markdown
 ## Quality Report — [repo or module]
 
@@ -109,18 +113,12 @@ One paragraph: overall health of the changes. Note the diff scope or target file
 [Repeat per finding]
 
 ### Questions (unverified suspicions)
-- [Things that looked wrong but couldn't be confirmed after validation]
+- [Things that looked wrong but couldn't be confirmed after validation. See `shared/templates/quality-scan-output-format.md` for the rule that unconfirmed findings are downgraded here.]
 
 ### Verdict
 **Quality:** Strong | Acceptable | Concerning
 **Top items to address:** [prioritized list]
 ```
-
-## Severity
-
-- **Critical**: Correctness or safety bug that can hit production; data loss, security hole, or obvious crash.
-- **Major**: Defect that will cause bugs, brittleness, or substantial maintenance pain soon.
-- **Minor**: Cleanup, clarity, small risk reduction.
 
 ## Guidelines
 
