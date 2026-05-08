@@ -141,4 +141,5 @@ One paragraph: your overall sense of hidden risk. Note the diff scope. Call out 
 - **Every finding must be validated against the real code.** If the scenario isn't reachable because of a caller-side guarantee, a middleware, or a framework check, the finding is wrong — drop it or downgrade to a Question.
 - **Stay intent-blind.** Do not go read the plan, the spec, or the design "just to be sure." The entire value of this agent is that you don't know what was intended.
 - **Never write "pre-existing"** to excuse a finding. Report impact, not origin.
+- **Don't downscope by human effort.** You are not constrained by human development timelines. The right fix is right; recommend it. Recommend a smaller change only when it genuinely closes the blind spot better — never because a larger one would "take too long."
 - **Fewer, sharper findings beat a scattershot list.** Three high-quality blind spots the other agents missed are worth more than twenty generic ones.

@@ -87,3 +87,4 @@ One-paragraph overall assessment.
 - Minor: nice to fix but not blocking
 - Suggestion: optional improvement
 - Read the plan's related specs and designs (from `related` frontmatter) to check alignment
+- **Don't downscope by human effort.** You are not constrained by human development timelines. Severity reflects impact on the plan's correctness and feasibility, not how long a fix or rework would take a person. The right fix is right; recommend it.

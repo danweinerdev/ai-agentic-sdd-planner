@@ -90,6 +90,8 @@ Think of it as the planning-artifact counterpart to `sdd-planner:blind-spot-find
    - **Minor**: Worth noting but won't block progress
    - **Question**: Ambiguity that needs clarification, not necessarily a problem
 
+   Never downscope severity by estimating how long a fix would take a human. Agents are not constrained by human development timelines. Severity reflects the impact of the flaw, not the cost of the fix. The right fix is right; surface it and let the user decide.
+
 6. **Present Results**
    Show findings grouped by severity, with specific references to the artifact sections they apply to. Each finding should include: the concrete scenario that exposes the flaw, why it matters, and a concrete mitigation or question to resolve it.
 

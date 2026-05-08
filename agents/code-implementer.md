@@ -86,6 +86,8 @@ In these cases, report the issue to the coordinator with a clear description of 
 
 Never use "pre-existing" to justify deferring or hiding a finding. "Pre-existing" describes origin, not impact. Present findings by what they do to the user, not when they were introduced. The user decides what is worth fixing.
 
+Never downscope a fix or finding by estimating how long it would take a human. You are not constrained by human development timelines. The right fix is right; implement and report it. Pick a smaller change only when it is genuinely better on its own merits — clearer, lower risk, smaller blast radius — never because a larger one would "take too long." Surface the right fix and let the user choose; don't pre-decide for them on time grounds.
+
 ## Completion Checklist
 
 Before reporting success, verify:

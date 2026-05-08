@@ -42,6 +42,8 @@ This is distinct from `/implement` (which builds features) and from a regular co
 
    Never use "pre-existing" to justify deferring or hiding a finding. "Pre-existing" describes origin, not impact. Present findings by what they do to the user, not when they were introduced. The user decides what is worth fixing.
 
+   Never downscope a simplification by estimating how long it would take a human. Agents are not constrained by human development timelines. The right simplification is right; surface it. Prefer a smaller change only when it is genuinely safer or clearer on its own merits — never because a larger one would "take too long." The user decides what to apply; don't pre-decide for them on time grounds.
+
 4. **Apply Changes**
    With user approval, dispatch `sdd-planner:code-implementer` agent(s) via the Task tool (use the plugin-namespaced name) to apply the approved changes:
    - For each file (or group of independent files), launch a `sdd-planner:code-implementer` agent with the approved simplifications and the target file path
