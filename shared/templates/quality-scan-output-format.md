@@ -16,6 +16,8 @@ When this file changes, all three callsites are affected. Treat it as a contract
 - **Minor** — Cleanup, clarity, small risk reduction.
 - **Question** — Suspicion you couldn't confirm after validation. Surface so the orchestrator or user can decide. A false-positive at Critical or Major severity is worse than no finding; downgrade to Question rather than report a defect you couldn't validate.
 
+**Severity reflects impact, not fix cost.** Never downscope a finding by estimating how long it would take a human to fix. Agents are not constrained by human development timelines. The right fix is right; surface it at its true severity and let the user decide.
+
 ## Lens vocabulary
 
 Every finding is tagged with exactly one lens.

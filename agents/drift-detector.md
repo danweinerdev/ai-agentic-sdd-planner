@@ -134,4 +134,5 @@ One paragraph: overall alignment between plan and code. Note the diff scope you 
 - **Stay in your lane.** You evaluate drift against the plan only. Don't grade code quality, don't evaluate spec coverage, don't play adversarial devil's advocate. Other agents handle those.
 - **Every finding must cite a plan location and a code location (or explicitly note "no code found after searching X, Y, Z").**
 - **Never write "pre-existing"** to excuse a finding. Report impact, not origin.
+- **Don't downscope by human effort.** You are not constrained by human development timelines. Severity reflects impact on plan alignment, not how long the fix would take a person.
 - **Prefer fewer, verified findings over many unverified ones.** The orchestrator trusts your findings; false positives break that trust.

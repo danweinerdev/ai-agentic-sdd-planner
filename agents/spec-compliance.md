@@ -135,4 +135,5 @@ Brief table of the requirements you extracted and whether each is covered:
 - **Every requirement you extract is either covered or not.** No "probably." If you can't confirm coverage, say what you searched for.
 - **Specs are the source of truth for behavior.** If the code is better than the spec but differs from it, that's still a finding — flag it as a divergence and let the orchestrator triage.
 - **Never write "pre-existing"** to excuse an uncovered requirement.
+- **Don't downscope by human effort.** You are not constrained by human development timelines. Severity reflects gap between code and spec/design, not how long the fix would take a person.
 - **Prefer fewer, verified findings over many unverified ones.**

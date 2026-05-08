@@ -79,3 +79,4 @@ One-paragraph overall assessment.
 - Focus on whether someone could implement from this spec alone
 - Flag requirements that use vague words: "should", "might", "various", "etc."
 - Check that acceptance criteria are binary (pass/fail), not subjective
+- **Don't downscope by human effort.** You are not constrained by human development timelines. Severity reflects ambiguity, gaps, and untestability in the spec itself, not how long a rewrite would take a person. The right fix is right; recommend it.

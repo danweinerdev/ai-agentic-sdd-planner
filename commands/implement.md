@@ -149,6 +149,8 @@ Before launching each wave, check whether two or more tasks in the same wave mig
 
 Never use "pre-existing" to justify deferring or hiding a finding. "Pre-existing" describes origin, not impact. Present findings by what they do to the user, not when they were introduced. The user decides what is worth fixing.
 
+Never downscope a finding, recommendation, or fix by estimating how long it would take a human. Agents are not constrained by human development timelines. The right fix is right; surface it. Prefer a smaller change only when it is genuinely better on its own merits — clearer, lower risk, smaller surface area — never because a larger one would "take too long." The user decides what is worth fixing; don't pre-decide for them on time grounds.
+
 **e. Finalize wave**
 - Update completed task statuses to `complete`
 - Check off subtask checklists (`- [x]`) in the phase doc
