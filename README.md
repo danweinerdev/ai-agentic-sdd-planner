@@ -296,22 +296,22 @@ The dashboard is opt-in via `"dashboard": true` in `planning-config.json` (plus 
 sdd-planner/                       # The plugin itself (not your project)
 ├── .claude-plugin/
 │   └── plugin.json               # Plugin manifest (name: "sdd-planner")
-├── commands/                     # Slash commands → /sdd-planner:*
-│   ├── brainstorm.md
-│   ├── code-review.md
-│   ├── debrief.md
-│   ├── design.md
-│   ├── diagram.md
-│   ├── excavate.md
-│   ├── implement.md
-│   ├── plan.md
-│   ├── poke-holes.md
-│   ├── research.md
-│   ├── retro.md
-│   ├── setup.md
-│   ├── simplify.md
-│   ├── specify.md
-│   └── tend.md
+├── commands/                     # Slash commands → /sdd-planner:* (each command is its own dir with SKILL.md)
+│   ├── brainstorm/SKILL.md
+│   ├── code-review/SKILL.md
+│   ├── debrief/SKILL.md
+│   ├── design/SKILL.md
+│   ├── diagram/SKILL.md
+│   ├── excavate/SKILL.md
+│   ├── implement/SKILL.md
+│   ├── plan/SKILL.md
+│   ├── poke-holes/SKILL.md
+│   ├── research/SKILL.md
+│   ├── retro/SKILL.md
+│   ├── setup/SKILL.md
+│   ├── simplify/SKILL.md
+│   ├── specify/SKILL.md
+│   └── tend/SKILL.md
 ├── agents/                       # Review agents
 │   ├── blind-spot-finder.md
 │   ├── code-implementer.md

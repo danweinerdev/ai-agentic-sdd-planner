@@ -12,7 +12,7 @@ sdd-planner/                      # Repository root = plugin root
 ├── Makefile                      # make bump-patch / bump-minor / bump-major
 ├── planning-config.json          # Planning configuration
 ├── .gitignore
-├── commands/                     # Slash commands (auto-namespaced /sdd-planner:*)
+├── commands/                     # Slash commands (auto-namespaced /sdd-planner:*); each is a dir with SKILL.md inside
 ├── agents/                       # Subagent definitions
 ├── shared/
 │   ├── frontmatter-schema.md     # Single source of truth for artifact metadata

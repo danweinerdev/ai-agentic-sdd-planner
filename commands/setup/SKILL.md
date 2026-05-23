@@ -69,7 +69,7 @@ Determine where planning artifacts will live, in this priority order. **The valu
 
 1. **Explicit flag**: If `--planning-root` was provided, use that path verbatim.
 2. **Sibling inheritance** (only when VCS is `git-worktree`): Run `git -C <target> worktree list --porcelain` to find sibling worktrees. For each sibling (excluding the target itself), check if `<sibling>/planning-config.json` exists. If found, read its `planningRoot` value and use it verbatim. Report: "Inheriting planningRoot from sibling worktree: `<sibling-path>`". This step is skipped for non-git VCS.
-3. **Default**: Use the plugin directory. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/setup.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Then go one level up. The plugin directory lives outside the user's project, so this default is recorded as an absolute path.
+3. **Default**: Use the plugin directory. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/setup/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/setup/SKILL.md` from the matched path to get the plugin directory. The plugin directory lives outside the user's project, so this default is recorded as an absolute path.
 
 ### 4. Ask Configuration Questions (if needed)
 
@@ -134,7 +134,7 @@ Check `<target>/.claude/skills/` and `<target>/.claude/agents/` for leftover fil
 
 **Symlinks**: Remove any `.md` symlinks that point into the plugin directory (these are from the legacy symlink-based setup).
 
-**Copies**: Compare filenames in `.claude/skills/*.md` against `commands/*.md` in the plugin directory, and `.claude/agents/*.md` against `agents/*.md`. Remove matching files (these are stale copies from before the plugin system). Keep non-matching files — they may be user-created.
+**Copies**: For each `.md` file under `.claude/skills/`, check the plugin directory for a same-basename match (`.claude/skills/plan.md` matches if `commands/plan/SKILL.md` exists in the plugin, since the plugin's commands are now directory-bundled). For each `.md` file under `.claude/agents/`, check for a same-name `.md` in `agents/`. Remove the matches — they're stale copies from before the plugin system. Keep non-matching files — they may be user-created.
 
 Remove empty `.claude/skills/` or `.claude/agents/` directories after cleanup.
 
