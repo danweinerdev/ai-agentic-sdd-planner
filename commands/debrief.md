@@ -20,7 +20,7 @@ When a plan phase has been completed (or substantially completed) and you want t
 ## Process
 
 1. **Identify Target**
-   - Scan `Plans/Active/` for plans with in-progress or completed phases (debriefs happen during active work)
+   - Scan `Plans/` for plans whose README frontmatter `status` is `active` and that have in-progress or completed phases (debriefs happen during active work)
    - Ask which plan and phase to debrief (or infer from context)
    - Read the phase document to understand what was planned
    - Read the plan README for overall context
@@ -47,7 +47,7 @@ When a plan phase has been completed (or substantially completed) and you want t
    Ask the user to confirm or extend the list before writing — they may have noticed patterns you didn't.
 
 4. **Write Debrief**
-   - Create `Plans/Active/<PlanName>/notes/<NN>-<Phase-Name>.md` using `shared/templates/debrief.md`
+   - Create `Plans/<PlanName>/notes/<NN>-<Phase-Name>.md` using `shared/templates/debrief.md`
    - Fill in all sections: Decisions Made, Requirements Assessment, Deviations, Risks & Issues, Lessons Learned, Impact on Subsequent Phases, **Skill Opportunities**
    - The filename mirrors the phase doc number (e.g., `01-Core-Setup.md` -> `notes/01-Core-Setup.md`)
 
@@ -56,11 +56,11 @@ When a plan phase has been completed (or substantially completed) and you want t
      - The phase doc frontmatter
      - The plan README's `phases[]` array
    - Update `updated` dates
-   - If this was the final phase and all phases are now complete, move the plan from `Plans/Active/` to `Plans/Complete/` using the VCS-appropriate move command (see `shared/vcs-detection.md`)
+   - If this was the final phase and all phases are now complete, set the plan README frontmatter `status` to `complete`
 
 ## Output
 ```
-Plans/Active/<PlanName>/notes/<NN>-<Phase-Name>.md
+Plans/<PlanName>/notes/<NN>-<Phase-Name>.md
 ```
 
 ## Document Structure
@@ -76,6 +76,6 @@ See `shared/templates/debrief.md`:
 ## Context
 - Template: `shared/templates/debrief.md`
 - Schema: `shared/frontmatter-schema.md`
-- Target plan: `Plans/Active/<PlanName>/`
+- Target plan: `Plans/<PlanName>/` (status: `active`)
 - Related specs: `Specs/`
 - Related designs: `Designs/`

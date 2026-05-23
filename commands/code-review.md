@@ -62,9 +62,9 @@ Each runs in its own fresh context. The whole point is that one reviewer's frami
 
 Your goal in this step is to produce four strings: plan path, phase doc path, target repo path, and diff scope. Do NOT read the contents of the plan or phase doc — just their paths.
 
-- **Plan and phase**: ask the user, or infer from context. If inferring, use `Glob` on `Plans/Active/*/README.md` (filenames only — do **not** `Read` them). If there is a single active plan, pick it; if there are multiple, ask. Capture:
-  - Plan path (e.g., `Plans/Active/<PlanName>/README.md`)
-  - Phase doc path (e.g., `Plans/Active/<PlanName>/<NN>-<Phase-Name>.md`)
+- **Plan and phase**: ask the user, or infer from context. If inferring, use `Glob` on `Plans/*/README.md` (filenames only — do **not** `Read` them) and filter to those whose frontmatter `status` is `active` (read only the frontmatter, not the body). If there is a single active plan, pick it; if there are multiple, ask. Capture:
+  - Plan path (e.g., `Plans/<PlanName>/README.md`)
+  - Phase doc path (e.g., `Plans/<PlanName>/<NN>-<Phase-Name>.md`)
 - **Target repo path**: read `planning-config.json` for `planMapping` to find the repo key for this plan, then read `planning-config.local.json` for `repositories.<key>.path` to get the absolute local path. If that doesn't resolve, ask the user where the code lives.
 - **Diff scope**: if the user specified a branch, commit range, or "working + staged", record that verbatim. Otherwise, record "determine from phase created date" — the sub-agents can resolve it.
 
@@ -74,7 +74,7 @@ To dispatch the sub-agents with the right inputs, you need a little bit of infor
 
 **a. Plan README frontmatter only.** Use `Read` on the plan README, but stop after the frontmatter. Extract the `related` field to get the list of spec paths (under `Specs/`) and design paths (under `Designs/`). **Do not** read the body of the README — the sub-agents will do that.
 
-**b. Prior debrief paths.** Use `Glob` on `Plans/Active/<PlanName>/notes/*.md` to get the list of prior debrief paths. Do not read their contents — `drift-detector` will do that.
+**b. Prior debrief paths.** Use `Glob` on `Plans/<PlanName>/notes/*.md` to get the list of prior debrief paths. Do not read their contents — `drift-detector` will do that.
 
 **c. Resolve the diff scope.** First, detect the target repo's VCS using `shared/vcs-detection.md`. Then orient using the VCS-appropriate "working-tree status" and "recent history" commands from that file (e.g., `git status` + `git log --oneline -20` for git, `p4 opened` + `p4 changes -m 20` for perforce). If the user gave an explicit range, use it. If the user said "determine from phase created date", read only the frontmatter of the phase doc to get the `created` date, then find the earliest commit/changelist on or after that date. If you still can't resolve (or the VCS is `none`, in which case there is no history), ask the user for a base. Capture the scope as a concrete diff command (`git diff <base>..<head>` for git, `p4 diff2 -dw //path/...@<base> //path/...@<head>` for perforce) plus any unsubmitted/working coverage the user requested. **Do not** run the diff and read the patch content — the sub-agents will. Pass the detected VCS and the resolved diff command to each sub-agent so they don't have to re-detect.
 
@@ -290,9 +290,9 @@ No new artifact is created. This skill produces an inline review presented to th
 ## Context
 - Orchestration: `shared/orchestration.md`
 - Schema: `shared/frontmatter-schema.md`
-- Target plan: `Plans/Active/<PlanName>/`
+- Target plan: `Plans/<PlanName>/` (status: `active`)
 - Related specs: `Specs/`
 - Related designs: `Designs/`
-- Prior debriefs: `Plans/Active/<PlanName>/notes/`
+- Prior debriefs: `Plans/<PlanName>/notes/`
 - Local repo paths: `planning-config.local.json`
 - Sub-agents (dispatched via Task from the primary context): `sdd-planner:drift-detector`, `sdd-planner:quality-scanner`, `sdd-planner:spec-compliance`, `sdd-planner:blind-spot-finder`

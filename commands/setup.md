@@ -15,7 +15,7 @@ When configuring a directory (an existing repo, a fresh `git init`, a Perforce w
 1. Detects the VCS rooted at the target directory using `shared/vcs-detection.md` (one of: `git`, `git-worktree`, `git-bare`, `perforce`, `none`)
 2. For `git-worktree`, searches sibling worktrees for an existing `planning-config.json` and inherits settings
 3. Generates `planning-config.json` — the config that tells the plugin where planning artifacts live
-4. Bootstraps planning directories (Plans/New/, Plans/Ready/, Plans/Active/, Plans/Complete/, Research/, Brainstorm/, Specs/, Designs/, Retro/) if they don't exist
+4. Bootstraps planning directories (Plans/, Research/, Brainstorm/, Specs/, Designs/, Retro/) if they don't exist
 5. Creates a launcher script (`claude.sh` / `claude.cmd`) for launching Claude with the plugin
 6. Sets up the appropriate ignore file for the detected VCS (`.gitignore`, `.p4ignore`, or skipped for `none`)
 7. Cleans any stale legacy symlinks or file copies from older plugin versions
@@ -116,16 +116,15 @@ If the file already exists and `planningRoot` matches, report "planning-config.j
 Resolve the planning root path *for this step only*: if relative, join with the target directory; if absolute, use as-is. (The stored value in `planning-config.json` does not change.) Then create these directories if they don't already exist:
 
 ```
-<resolved-planning-root>/Plans/New/
-<resolved-planning-root>/Plans/Ready/
-<resolved-planning-root>/Plans/Active/
-<resolved-planning-root>/Plans/Complete/
+<resolved-planning-root>/Plans/
 <resolved-planning-root>/Research/
 <resolved-planning-root>/Brainstorm/
 <resolved-planning-root>/Specs/
 <resolved-planning-root>/Designs/
 <resolved-planning-root>/Retro/
 ```
+
+Plan lifecycle is tracked in each plan's README frontmatter `status` field — `Plans/` stays flat.
 
 Use `mkdir -p` — safe to run on existing directories. Report which directories were created vs already existed.
 

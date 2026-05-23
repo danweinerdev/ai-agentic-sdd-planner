@@ -20,7 +20,7 @@ When a plan phase needs more detail: additional tasks, subtask checklists, imple
 ## Process
 
 1. **Identify Target**
-   - Scan `Plans/New/`, `Plans/Ready/`, and `Plans/Active/` for available plans (skip `Plans/Complete/`)
+   - Scan `Plans/` for plans whose README frontmatter `status` is `draft`, `approved`, or `active` (skip `complete` and `archived`)
    - Ask which plan and phase to expand (or infer from context)
    - Read the current phase document
    - Read the plan README for overall context
@@ -74,7 +74,7 @@ Implementation guidance, edge cases, etc.
 ## Context
 - Orchestration: `shared/orchestration.md`
 - Schema: `shared/frontmatter-schema.md`
-- Target plan: `Plans/{New,Ready,Active}/<PlanName>/`
+- Target plan: `Plans/<PlanName>/` (status: `draft`, `approved`, or `active`)
 - Related specs: `Specs/`
 - Related designs: `Designs/`
 - Agent: `sdd-planner:researcher`

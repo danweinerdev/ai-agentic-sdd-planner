@@ -38,9 +38,9 @@ When you need to break down a feature, project, or initiative into an actionable
    - Present the structure to the user for feedback before writing files
 
 3. **Create Plan Files**
-   - Create `Plans/New/<PlanName>/README.md` using `shared/templates/plan-readme.md`
+   - Create `Plans/<PlanName>/README.md` using `shared/templates/plan-readme.md` with `status: draft`
    - Create numbered phase docs using `shared/templates/plan-phase.md`
-   - Create `Plans/New/<PlanName>/notes/` directory for future debriefs
+   - Create `Plans/<PlanName>/notes/` directory for future debriefs
    - Populate frontmatter with all phase/task metadata
    - Write body content with task details, subtask checklists, verification criteria, and acceptance criteria
    - **Use Mermaid diagrams** in the Architecture section and anywhere visual structure helps — prefer `graph TD` for phase dependencies, `flowchart LR` for data flow, etc. over ASCII art
@@ -48,19 +48,18 @@ When you need to break down a feature, project, or initiative into an actionable
 4. **Review**
    - Invoke the `sdd-planner:plan-reviewer` agent to review the complete plan
    - Address any issues raised by the reviewer
-   - Update plan status to `approved` once review passes
-   - Move the plan folder from `Plans/New/` to `Plans/Ready/`. Use the VCS-appropriate move command from `shared/vcs-detection.md` — `git mv` for git, `p4 move` for perforce, plain `mv` if there's no VCS.
+   - Once review passes, update the plan README frontmatter `status` to `approved`
 
 ## Output
 ```
-Plans/New/<PlanName>/
+Plans/<PlanName>/
 ├── README.md              # Plan overview with phases in frontmatter
 ├── 01-Phase-Name.md       # Phase 1 with tasks in frontmatter
 ├── 02-Phase-Name.md       # Phase 2
 ├── ...
 └── notes/                 # Empty, ready for debriefs
 ```
-On approval, the plan moves to `Plans/Ready/<PlanName>/`.
+Plan lifecycle (`draft` → `approved` → `active` → `complete`) is tracked in the README frontmatter `status` field. The plan directory stays put.
 
 ## Document Structure
 
@@ -81,6 +80,6 @@ See `shared/frontmatter-schema.md` for the phase frontmatter schema. Body contai
 - Orchestration: `shared/orchestration.md`
 - Templates: `shared/templates/plan-readme.md`, `shared/templates/plan-phase.md`
 - Schema: `shared/frontmatter-schema.md`
-- Existing plans: `Plans/New/`, `Plans/Ready/`, `Plans/Active/`, `Plans/Complete/`
+- Existing plans: `Plans/` (status in each plan's `README.md` frontmatter)
 - Related specs: `Specs/`
 - Related designs: `Designs/`

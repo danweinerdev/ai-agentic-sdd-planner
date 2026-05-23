@@ -29,9 +29,9 @@ If `planning-config.local.json` exists, read it for local filesystem paths to th
 ## Inputs
 
 You are invoked with:
-- **Plan README** path (e.g., `Plans/Active/<PlanName>/README.md`) — overall context, architecture, key decisions, phase list
-- **Phase doc** path (e.g., `Plans/Active/<PlanName>/<NN>-<Phase>.md`) — task list, subtasks, deliverables, acceptance criteria
-- **Prior debriefs** (if any) from `Plans/Active/<PlanName>/notes/`
+- **Plan README** path (e.g., `Plans/<PlanName>/README.md`) — overall context, architecture, key decisions, phase list
+- **Phase doc** path (e.g., `Plans/<PlanName>/<NN>-<Phase>.md`) — task list, subtasks, deliverables, acceptance criteria
+- **Prior debriefs** (if any) from `Plans/<PlanName>/notes/`
 - **Target repo path** — where the code lives
 - **Diff scope** — working changes, staged changes, and/or a commit range
 
@@ -102,7 +102,7 @@ One paragraph: overall alignment between plan and code. Note the diff scope you 
 
 ### Scope Creep (code → no plan)
 - **[Severity]** New file `src/metrics/exporter.py` — not mentioned in plan or any prior phase.
-  - **Validated by:** grepped plan README, phase doc, and `Plans/Active/<PlanName>/notes/` for "metrics" and "exporter" — no matches.
+  - **Validated by:** grepped plan README, phase doc, and `Plans/<PlanName>/notes/` for "metrics" and "exporter" — no matches.
   - **Recommendation:** …
 
 ### Approach Drift

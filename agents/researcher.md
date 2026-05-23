@@ -32,7 +32,7 @@ You are invoked at the start of `/brainstorm`, `/specify`, `/design`, and `/plan
    - `Brainstorm/` — ideas and evaluations
    - `Specs/` — existing specifications
    - `Designs/` — existing architecture documents
-   - `Plans/New/`, `Plans/Ready/`, `Plans/Active/` — related or dependent plans (skip `Plans/Complete/` unless explicitly asked)
+   - `Plans/` — related or dependent plans (filter by each plan's frontmatter `status`; skip plans with status `complete` or `archived` unless explicitly asked)
    - `Retro/` — lessons learned that may apply
 
 2. **Search the codebase** for relevant code:

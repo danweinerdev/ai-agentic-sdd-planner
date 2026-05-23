@@ -15,13 +15,9 @@
 │   └── <feature>/README.md
 ├── Designs/                      # Designs (subdirectory per component)
 │   └── <component>/README.md
-├── Plans/                        # Implementation plans
-│   ├── New/                      # Draft plans, not yet approved
-│   ├── Ready/                    # Approved, ready to implement
-│   ├── Active/                   # Currently being implemented
-│   └── Complete/                 # Done, frozen — AI skips unless asked
-│   └── <status>/<PlanName>/
-│       ├── README.md             # Frontmatter with phases[], overview
+├── Plans/                        # Implementation plans (flat — status lives in frontmatter)
+│   └── <PlanName>/
+│       ├── README.md             # Frontmatter with status, phases[], overview
 │       ├── 01-Phase-Name.md      # Frontmatter with tasks[], details
 │       └── notes/                # After-action notes
 │           └── 01-Phase-Name.md  # Debrief for Phase 1
@@ -50,25 +46,16 @@ Plan (README.md)       <- like a Jira Project
 | phase | `planned`, `in-progress`, `complete`, `blocked`, `deferred` |
 | task | `planned`, `in-progress`, `complete`, `blocked`, `deferred` |
 
-### Plan Lifecycle Folders
-Plans move between status folders as they progress:
+### Plan Lifecycle
+Plans live flat under `Plans/<PlanName>/`. Lifecycle is tracked in the plan README's frontmatter `status` field (`draft`, `approved`, `active`, `complete`, `archived`) — not by moving directories. Commands update `status` as plans progress:
+- `/plan` creates the plan with `status: draft`, then sets `status: approved` after review
+- `/implement` sets `status: active` when starting work
+- `/debrief` (or `/tend`) sets `status: complete` when all phases are done
 
-| Folder | Status | When |
-|--------|--------|------|
-| `New/` | `draft` | Plan created, not yet reviewed |
-| `Ready/` | `approved` | Plan reviewed and approved, waiting to start |
-| `Active/` | `active` | Implementation in progress |
-| `Complete/` | `complete` | All phases done, plan frozen |
-
-Commands that change plan status also move the plan directory:
-- `/plan` creates in `New/`, moves to `Ready/` on approval
-- `/implement` moves from `Ready/` to `Active/` when starting
-- `/debrief` or `/tend` moves from `Active/` to `Complete/` when all phases are done
-
-AI commands limit their scan scope to relevant folders to reduce context processing.
+AI commands filter by `status` to scope what they read.
 
 ### File Naming
-- Plans: `Plans/{New,Ready,Active,Complete}/<PlanName>/README.md`, `01-Phase-Name.md`
+- Plans: `Plans/<PlanName>/README.md`, `01-Phase-Name.md`
 - Phases numbered with zero-padded prefixes: `01-`, `02-`, etc.
 - Retros: `YYYY-MM-DD-<slug>.md`
 - Specs/Designs: `<Name>/README.md`
@@ -84,7 +71,7 @@ Always use templates from `shared/templates/` when creating new artifacts. Repla
 | `/brainstorm` | Explore possibilities → `Brainstorm/<topic>.md` |
 | `/specify` | Write requirements → `Specs/<feature>/README.md` |
 | `/design` | Technical architecture → `Designs/<component>/README.md` |
-| `/plan` | Create implementation plan → `Plans/New/<Name>/` |
+| `/plan` | Create implementation plan → `Plans/<Name>/` |
 | `/breakdown` | Add detail to plan phases |
 | `/code-review` | Orchestrated code review — drift + quality + spec compliance + blind spots |
 | `/debrief` | After-action notes for completed phases |

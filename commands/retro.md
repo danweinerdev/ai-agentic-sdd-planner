@@ -28,7 +28,7 @@ After completing a significant piece of work (a plan, a sprint, a milestone) to 
      - What went well
      - What could be improved
      - Any key metrics or outcomes
-   - Review recent debriefs from `Plans/Active/*/notes/` and `Plans/Complete/*/notes/` for context — and specifically look at each debrief's **Skill Opportunities** section to aggregate patterns that showed up across multiple phases
+   - Review recent debriefs from `Plans/*/notes/` for context (filter by each plan's frontmatter `status` — typically `active` and `complete`) — and specifically look at each debrief's **Skill Opportunities** section to aggregate patterns that showed up across multiple phases
 
 3. **Spot Skill Opportunities**
    A retro spans a larger window than a single debrief, so skill opportunities here are often richer — patterns that repeated across phases, across plans, or across team members. Look for:

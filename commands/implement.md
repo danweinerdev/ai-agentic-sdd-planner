@@ -22,7 +22,7 @@ Per-task reviews during `/implement` dispatch `quality-scanner` directly (not th
 ## Process
 
 ### 1. Select Phase
-- Scan `Plans/Ready/` and `Plans/Active/` for available plans (skip `Plans/New/` and `Plans/Complete/`)
+- Scan `Plans/` for plans whose README frontmatter `status` is `approved` or `active` (skip `draft`, `complete`, and `archived`)
 - Ask which plan and phase to implement (or infer from context)
 - Read the plan README to understand overall context and phase dependencies
 - Read the target phase document to get the task list
@@ -30,8 +30,7 @@ Per-task reviews during `/implement` dispatch `quality-scanner` directly (not th
   - Plan status must be `approved` or `active`
   - Phase status must be `planned` or `in-progress` (not `complete`, `blocked`, or `deferred`)
   - Any phases in `depends_on` must be `complete`
-- If plan is in `Plans/Ready/`, move it to `Plans/Active/` using the VCS-appropriate move command (see `shared/vcs-detection.md` — `git mv` for git, `p4 move` for perforce, plain `mv` if none) and update plan status to `active`
-- If plan status is `approved`, update it to `active`
+- If plan status is `approved`, update the README frontmatter `status` to `active`
 - If phase status is `planned`, update it to `in-progress`
 
 ### 2. Locate Target Codebase
@@ -43,7 +42,7 @@ Per-task reviews during `/implement` dispatch `quality-scanner` directly (not th
 ### 3. Load Context
 - Read related specs from `Specs/` (referenced in plan README `related` field)
 - Read related designs from `Designs/`
-- Review any previous phase debriefs in `Plans/Active/<PlanName>/notes/` for context from prior phases
+- Review any previous phase debriefs in `Plans/<PlanName>/notes/` for context from prior phases
 - Build a mental model of what this phase needs to deliver
 
 ### 4. Verify Task Readiness
@@ -165,7 +164,7 @@ Once all tasks are complete (or all remaining tasks are blocked):
 **All tasks complete:**
 - Update phase status to `complete` in both the phase doc and plan README
 - Update `updated` dates
-- If all phases in the plan are now complete, move the plan from `Plans/Active/` to `Plans/Complete/` using the VCS-appropriate move command (see `shared/vcs-detection.md`)
+- If all phases in the plan are now complete, set the plan README frontmatter `status` to `complete`
 - Suggest running `/debrief` to capture what happened
 
 **Some tasks blocked:**
@@ -235,8 +234,8 @@ Code changes go to the target repository (not the planning root).
 - Schema: `shared/frontmatter-schema.md`
 - Per-task findings template: `shared/templates/per-task-findings.md`
 - Quality-scanner dispatch template: `shared/templates/quality-scan-prompt.md`
-- Target plan: `Plans/Ready/<PlanName>/` or `Plans/Active/<PlanName>/`
+- Target plan: `Plans/<PlanName>/` (status: `approved` or `active`)
 - Related specs: `Specs/`
 - Related designs: `Designs/`
-- Prior debriefs: `Plans/Active/<PlanName>/notes/`
+- Prior debriefs: `Plans/<PlanName>/notes/`
 - Local repo paths: `planning-config.local.json`

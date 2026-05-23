@@ -23,41 +23,40 @@ Read `planning-config.json` (at repo root) to find the planning root:
 
 ## Pre-flight: Legacy Layout Detection
 
-Before running any mode, check whether `Plans/` uses the **legacy flat layout** (plan directories directly under `Plans/`) instead of the current **status subfolder layout** (`Plans/{New,Ready,Active,Complete}/`).
+Before running any mode, check whether `Plans/` uses the **legacy status-subfolder layout** (`Plans/New/`, `Plans/Ready/`, `Plans/Active/`, `Plans/Complete/`) instead of the current **flat layout** (plan directories directly under `Plans/`, with lifecycle tracked in each plan README's frontmatter `status` field).
 
-**Detection**: List the contents of `Plans/`. If there are plan directories (containing `README.md`) directly under `Plans/` — i.e., not inside `New/`, `Ready/`, `Active/`, or `Complete/` — the layout is legacy.
+**Detection**: List the contents of `Plans/`. If any of `New/`, `Ready/`, `Active/`, or `Complete/` exist as subdirectories, the layout is legacy.
 
 If legacy layout is detected:
 
 1. **Report** the finding and show which plans were detected:
    ```
-   Legacy Plans/ layout detected — plans are stored flat instead of in status subfolders.
+   Legacy Plans/ layout detected — plans are stored in status subfolders.
 
    Found N plans to migrate:
-     - PlanName (status: active) → Plans/Active/PlanName/
-     - OtherPlan (status: complete) → Plans/Complete/OtherPlan/
-     - NewPlan (status: draft) → Plans/New/NewPlan/
+     - Plans/Active/PlanName/ → Plans/PlanName/ (frontmatter status: active)
+     - Plans/Complete/OtherPlan/ → Plans/OtherPlan/ (frontmatter status: complete)
+     - Plans/New/NewPlan/ → Plans/NewPlan/ (frontmatter status: draft)
    ```
 
 2. **Warn** the user:
    ```
-   This migration will move plan directories into status subfolders (New/, Ready/, Active/, Complete/).
+   This migration will move plan directories up to a flat layout under Plans/
+   and ensure each plan's README frontmatter `status` reflects its old folder.
    It will cause a significant number of file moves in version control.
-   This is completely optional — the plugin still supports the flat layout as a fallback.
    ```
 
-3. **Wait for confirmation**. If the user declines, skip the migration and continue to the requested mode(s) normally.
+3. **Wait for confirmation**. If the user declines, skip the migration and continue to the requested mode(s) normally — but flag that subsequent commands assume the flat layout.
 
 4. **If confirmed**, perform the migration:
-   - Create `Plans/New/`, `Plans/Ready/`, `Plans/Active/`, `Plans/Complete/` if they don't exist
-   - For each plan directory directly under `Plans/`:
-     - Read the plan's `README.md` frontmatter `status` field
-     - Map status to folder: `draft` → `New/`, `approved` → `Ready/`, `active` → `Active/`, `complete` or `archived` → `Complete/`
-     - If status is missing or unrecognized, default to `New/`
-     - Use the VCS-appropriate move command from `shared/vcs-detection.md` to move the plan directory into the appropriate status folder
+   - For each plan directory inside a status subfolder:
+     - Map subfolder back to a status value: `New/` → `draft`, `Ready/` → `approved`, `Active/` → `active`, `Complete/` → `complete`
+     - Read the plan's `README.md` frontmatter `status` field. If absent or inconsistent with the subfolder, set it to the subfolder-derived value (subfolder is the source of truth, since that's how the old workflow tracked it).
+     - Use the VCS-appropriate move command from `shared/vcs-detection.md` to move the plan directory from `Plans/<Subfolder>/<PlanName>/` to `Plans/<PlanName>/`
+   - Remove the now-empty `New/`, `Ready/`, `Active/`, and `Complete/` subdirectories
    - After all moves, report the results
 
-If status subfolders already exist (even if empty), skip this check entirely — the layout is already migrated.
+If `Plans/` already has plan directories directly under it and no status subfolders exist, skip this check entirely — the layout is already flat.
 
 ## Modes
 
@@ -97,14 +96,13 @@ Never skip confirmation for changes to existing content.
 ## Mode Details
 
 ### Status Mode
-Invoke the `sdd-planner:researcher` agent to scan all four status folders (`Plans/New/`, `Plans/Ready/`, `Plans/Active/`, `Plans/Complete/`) and compare status fields against reality. The agent returns a list of findings — what is stale, what is inconsistent, and what should be updated. Checks to perform:
+Invoke the `sdd-planner:researcher` agent to scan all plans under `Plans/` and compare status fields against reality. The agent returns a list of findings — what is stale, what is inconsistent, and what should be updated. Checks to perform:
 - Plans with all phases complete but plan status is still `active` → suggest `complete`
+- Plans with status `active` but no phase has started → suggest reverting to `approved`
 - Phases where all tasks are complete but phase status is `in-progress` → suggest `complete`
 - Specs/designs marked `approved` but their plan is `complete` → suggest `implemented`
 - Research/brainstorm still `active` but older than 30 days with no recent changes → flag as potentially stale
 - Phase status `in-progress` but no task has started → flag inconsistency
-- Plan folder does not match frontmatter status (e.g., plan in `New/` but status is `active`, or plan in `Active/` but all phases complete) → suggest moving to the correct folder
-- Plans in `Active/` with all phases complete → suggest moving to `Complete/`
 
 ### Tags Mode
 Invoke the `sdd-planner:researcher` agent to scan all artifact frontmatter for tags and analyze for variants, orphans, missing tags, and clusters. The agent returns the analysis. Checks to perform:
@@ -115,7 +113,7 @@ Invoke the `sdd-planner:researcher` agent to scan all artifact frontmatter for t
 
 ### Filenames Mode
 Invoke the `sdd-planner:researcher` agent to check naming conventions across all artifacts. The agent returns any violations found. Conventions to check (defined in CLAUDE.md):
-- Plans: `Plans/{New,Ready,Active,Complete}/<PlanName>/README.md`, phases `01-Phase-Name.md`
+- Plans: `Plans/<PlanName>/README.md`, phases `01-Phase-Name.md`
 - Specs: `Specs/<FeatureName>/README.md`
 - Designs: `Designs/<ComponentName>/README.md`
 - Research: `Research/<topic-slug>.md` (kebab-case)
