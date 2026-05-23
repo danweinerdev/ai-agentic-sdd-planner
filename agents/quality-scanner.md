@@ -74,8 +74,16 @@ If after validation you still can't confirm a finding, downgrade it to a **Quest
 - Deep nesting that obscures the control flow (suggest guard clauses / early returns)
 - Duplication: the same pattern appearing 3+ times and diverging
 - Names that mislead (a function called `get_user` that also mutates state)
-- Comments that contradict the code (stale comments are worse than no comments)
 - Magic numbers/strings without context
+- **Comment quality.** A comment must add **WHY** context the code itself can't convey — a hidden constraint, a subtle invariant, a workaround for a specific bug, behavior that would surprise a reader. Comments that fail this test are noise and should be flagged. Specifically flag:
+  - Comments that describe **WHAT** the code does instead of **WHY** — well-named identifiers already explain WHAT; restating it adds noise (e.g., `// loop over users` above `for user in users:`)
+  - Comments that contradict the code (stale comments are worse than no comments)
+  - Comments referencing PR-time or task-time context — `// added for X flow`, `// used by Y`, `// fixes issue Z`, `// from ticket ABC-123` — those rot as the code evolves and belong in the commit/PR description, not in the code
+  - Tombstones for deleted code (`// removed X`, commented-out blocks) — git history is the right place for that
+  - Section-banner comments that just paraphrase the file's structure (`// === Helpers ===`)
+  - Multi-paragraph docstrings or comment blocks that exist to "document" trivial functions
+
+  The test: if removing the comment wouldn't confuse a future reader, the comment shouldn't exist. Flag bad comments under Maintainability with a Minor severity by default; promote to Major if a misleading comment could lead a future reader to a wrong conclusion.
 
 ### 4. Testing
 - New or changed behavior with no corresponding test — verify by searching the test suite for the function, class, or behavior

@@ -48,7 +48,7 @@ A single reviewer juggling plan, specs, designs, code, and adversarial perspecti
 | Agent | Sees | Doesn't see | Role |
 |---|---|---|---|
 | `sdd-planner:drift-detector` | Diff + plan + phase doc + prior debriefs | Specs, designs, code-quality heuristics | Missing work, scope creep, approach drift |
-| `sdd-planner:quality-scanner` | Diff + code | Plan, specs, designs | Correctness, safety, maintainability, testing, over-engineering — intent-blind |
+| `sdd-planner:quality-scanner` | Diff + code | Plan, specs, designs | Correctness, safety, maintainability (including comment quality — WHAT-restating, PR-time-context, and tombstone comments are flagged as noise), testing, over-engineering — intent-blind |
 | `sdd-planner:spec-compliance` | Diff + specs + designs | Plan, phase doc | Requirements coverage, contract violations |
 | `sdd-planner:blind-spot-finder` | Diff only | Everything else | Adversarial fresh eyes — scenarios the author didn't consider |
 

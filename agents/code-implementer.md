@@ -48,6 +48,14 @@ You receive from the coordinator:
   - Import patterns
   - Error handling patterns
   - Test patterns and naming
+- **Comment policy — WHY, never WHAT.** Default to writing no comments. A well-named identifier already explains *what* the code does; restating it in a comment adds noise without value. Only add a comment when the **why** is non-obvious to a future reader (human or AI) — a hidden constraint, a subtle invariant, a workaround for a specific bug, behavior that would surprise the reader. A comment must earn its place by being valuable. Specifically forbidden:
+  - Restating what the next line of code does
+  - Narrating implementation steps (`// loop over users`, `// now check the result`)
+  - References to PR-time context (`// added for X flow`, `// used by Y`, `// fixes issue Z`) — those rot as the codebase evolves and belong in the commit/PR description, not the code
+  - Tombstones for removed code (`// removed X`, commented-out blocks)
+  - Section banners that just paraphrase the structure (`// === Helpers ===`)
+
+  Test for whether a comment should exist: if removing it would not confuse a future reader, it shouldn't be there.
 - **Verify library usage against current docs.** When you call into a framework, SDK, or API — especially one that has evolved recently — check whether the session has a documentation-lookup MCP server available (such as `context7`) and use it to confirm the API syntax, configuration, and idioms you're using are current. Your training data may lag behind reality. Do this even for well-known libraries; the cost of a docs lookup is far lower than the cost of shipping code that uses a deprecated API. If no docs MCP is available, fall back to reading the library's existing usage in the repo, plus WebFetch against the library's documentation site.
 
 ### 4. Validate
