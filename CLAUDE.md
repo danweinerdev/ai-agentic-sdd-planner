@@ -81,8 +81,7 @@ Always use templates from `shared/templates/` when creating new artifacts. Repla
 | `/sdd-planner:brainstorm` | Explore possibilities → `Brainstorm/<topic>.md` |
 | `/sdd-planner:specify` | Write requirements → `Specs/<feature>/README.md` |
 | `/sdd-planner:design` | Technical architecture → `Designs/<component>/README.md` |
-| `/sdd-planner:plan` | Create implementation plan → `Plans/<Name>/` |
-| `/sdd-planner:breakdown` | Add detail to plan phases |
+| `/sdd-planner:plan` | Create or expand an implementation plan → `Plans/<Name>/` (deepens existing plans via gap analysis on re-run) |
 | `/sdd-planner:implement` | Execute a plan phase — implement tasks, track progress |
 | `/sdd-planner:simplify` | Post-implementation code cleanup and simplification |
 | `/sdd-planner:code-review` | Review code against the plan — drift, gaps, blind spots |
@@ -147,7 +146,7 @@ The inheriting agents carry behavioral guardrails in their bodies (`researcher`,
 
 The typical flow through skills:
 ```
-/sdd-planner:setup → /sdd-planner:research → /sdd-planner:brainstorm → /sdd-planner:specify → /sdd-planner:design → /sdd-planner:plan → /sdd-planner:breakdown → /sdd-planner:implement → /sdd-planner:code-review → /sdd-planner:simplify → /sdd-planner:debrief → /sdd-planner:retro
+/sdd-planner:setup → /sdd-planner:research → /sdd-planner:brainstorm → /sdd-planner:specify → /sdd-planner:design → /sdd-planner:plan → /sdd-planner:implement → /sdd-planner:code-review → /sdd-planner:simplify → /sdd-planner:debrief → /sdd-planner:retro
 ```
 Install the companion [`sdd-dashboard`](https://github.com/danweinerdev/sdd-dashboard-plugin) plugin to add `/sdd-dashboard:dashboard` (HTML dashboard) and `/sdd-dashboard:status` (quick text summary) for checking progress.
 Use `/sdd-planner:poke-holes` before approving any artifact. Use `/sdd-planner:tend` periodically for hygiene.

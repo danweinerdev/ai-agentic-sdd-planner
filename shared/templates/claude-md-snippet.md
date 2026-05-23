@@ -29,8 +29,7 @@ Planning artifacts under `{{PLANNING_ROOT}}/` — managed by the `sdd-planner` p
 | `/brainstorm` | Explore possibilities → `{{PLANNING_ROOT}}/Brainstorm/<topic>.md` |
 | `/specify` | Write requirements → `{{PLANNING_ROOT}}/Specs/<feature>/README.md` |
 | `/design` | Technical architecture → `{{PLANNING_ROOT}}/Designs/<component>/README.md` |
-| `/plan` | Create implementation plan → `{{PLANNING_ROOT}}/Plans/<Name>/` |
-| `/breakdown` | Add detail to plan phases |
+| `/plan` | Create or expand an implementation plan → `{{PLANNING_ROOT}}/Plans/<Name>/` (deepens existing plans via gap analysis on re-run) |
 | `/code-review` | Orchestrated code review — drift + quality + spec compliance + blind spots |
 | `/debrief` | After-action notes for completed phases |
 | `/retro` | Capture learnings → `{{PLANNING_ROOT}}/Retro/YYYY-MM-DD-<slug>.md` |

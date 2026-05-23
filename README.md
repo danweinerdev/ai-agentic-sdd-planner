@@ -6,7 +6,7 @@ For the optional HTML dashboard view of these artifacts, install the companion [
 
 ## How It Works
 
-SDD Planner is a standalone Claude Code **plugin**. When loaded (via `--plugin-dir` or through a marketplace), it registers 16 slash commands (namespaced under `/sdd-planner:*`) and 8 review/implementation agents that Claude can delegate to. All artifacts are Markdown files with YAML frontmatter — companion tools (like `sdd-dashboard`) read frontmatter exclusively, so there's no brittle table parsing.
+SDD Planner is a standalone Claude Code **plugin**. When loaded (via `--plugin-dir` or through a marketplace), it registers 15 slash commands (namespaced under `/sdd-planner:*`) and 8 review/implementation agents that Claude can delegate to. All artifacts are Markdown files with YAML frontmatter — companion tools (like `sdd-dashboard`) read frontmatter exclusively, so there's no brittle table parsing.
 
 ```mermaid
 graph LR
@@ -78,8 +78,7 @@ All commands are namespaced as `/sdd-planner:*` automatically by the plugin syst
 | `/sdd-planner:brainstorm` | Explore possibilities | `Brainstorm/<topic>.md` |
 | `/sdd-planner:specify` | Write requirements | `Specs/<feature>/README.md` |
 | `/sdd-planner:design` | Technical architecture | `Designs/<component>/README.md` |
-| `/sdd-planner:plan` | Create implementation plan | `Plans/<Name>/README.md` + phase docs |
-| `/sdd-planner:breakdown` | Add detail to plan phases | Updates phase `.md` with tasks/subtasks |
+| `/sdd-planner:plan` | Create or expand an implementation plan (gap-analysis-driven on re-run) | `Plans/<Name>/README.md` + phase docs |
 | `/sdd-planner:implement` | Execute a plan phase | Code + updated task/phase statuses |
 | `/sdd-planner:code-review` | Review code — orchestrated drift + quality + spec + blind-spot review | Unified report (synthesis + raw sub-reports) |
 | `/sdd-planner:simplify` | Post-implementation cleanup | Simplified code, tests verified |
@@ -107,8 +106,7 @@ graph TD
     brainstorm --> specify["/sdd-planner:specify"]
     specify --> design["/sdd-planner:design"]
     design --> plan["/sdd-planner:plan"]
-    plan --> breakdown["/sdd-planner:breakdown"]
-    breakdown --> implement["/sdd-planner:implement"]
+    plan --> implement["/sdd-planner:implement"]
     implement --> codereview["/sdd-planner:code-review"]
     codereview --> simplify["/sdd-planner:simplify"]
     simplify --> debrief["/sdd-planner:debrief"]
@@ -133,7 +131,7 @@ graph TD
 
     class research,brainstorm discovery
     class specify,design definition
-    class plan,breakdown execution
+    class plan execution
     class implement,codereview,simplify implementation
     class debrief,retro review
     class poke,tend,diagram,excavate utility
@@ -144,7 +142,7 @@ graph TD
 | **Setup** | `setup` | Configure a repo for planner |
 | **Discovery** | `research`, `brainstorm`, `excavate` | Gather context, explore options, map codebases |
 | **Definition** | `specify`, `design` | Lock down requirements and architecture |
-| **Execution** | `plan`, `breakdown` | Structure work into phases, tasks, subtasks |
+| **Execution** | `plan` | Structure work into phases, tasks, subtasks (re-run to deepen an existing plan) |
 | **Implementation** | `implement`, `code-review`, `simplify` | Build it, verify it, then clean it up |
 | **Review** | `debrief`, `retro` | Capture what happened and what you learned |
 | **Utilities** | `poke-holes`, `tend`, `diagram`, `excavate` | Challenge, maintain, visualize, explore |
@@ -300,7 +298,6 @@ sdd-planner/                       # The plugin itself (not your project)
 │   └── plugin.json               # Plugin manifest (name: "sdd-planner")
 ├── commands/                     # Slash commands → /sdd-planner:*
 │   ├── brainstorm.md
-│   ├── breakdown.md
 │   ├── code-review.md
 │   ├── debrief.md
 │   ├── design.md

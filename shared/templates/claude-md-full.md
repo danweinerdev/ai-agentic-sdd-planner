@@ -71,8 +71,7 @@ Always use templates from `shared/templates/` when creating new artifacts. Repla
 | `/brainstorm` | Explore possibilities → `Brainstorm/<topic>.md` |
 | `/specify` | Write requirements → `Specs/<feature>/README.md` |
 | `/design` | Technical architecture → `Designs/<component>/README.md` |
-| `/plan` | Create implementation plan → `Plans/<Name>/` |
-| `/breakdown` | Add detail to plan phases |
+| `/plan` | Create or expand an implementation plan → `Plans/<Name>/` (deepens existing plans via gap analysis on re-run) |
 | `/code-review` | Orchestrated code review — drift + quality + spec compliance + blind spots |
 | `/debrief` | After-action notes for completed phases |
 | `/retro` | Capture learnings → `Retro/YYYY-MM-DD-<slug>.md` |
@@ -118,7 +117,7 @@ To restrict the inheriting agents in this project, drop an override at `.claude/
 
 The typical flow through skills:
 ```
-/research → /brainstorm → /specify → /design → /plan → /breakdown → [implement] → /code-review → /debrief → /retro
+/research → /brainstorm → /specify → /design → /plan → [implement] → /code-review → /debrief → /retro
 ```
 If the `sdd-dashboard` plugin is installed, use `/sdd-dashboard:dashboard` or `/sdd-dashboard:status` at any point to check progress.
 

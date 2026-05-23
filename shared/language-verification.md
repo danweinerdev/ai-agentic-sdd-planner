@@ -13,7 +13,7 @@ When a project uses multiple languages, read and apply each relevant file.
 ## Skill Integration
 
 - **`/design`** — include relevant tools in the Testing Strategy section
-- **`/plan` and `/breakdown`** — include in task `verification` fields where appropriate
+- **`/plan`** — include in task `verification` fields where appropriate (both when creating a new plan and when expanding an existing one)
 - **`/implement`** — run these checks as part of verifying task completion
 - **`/code-review`** — check that structural verification was actually performed
 
