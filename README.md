@@ -233,6 +233,31 @@ graph TD
 
 **Hard contract:** `/code-review` must dispatch the four sub-agents via Task. It must not do the review in primary and present it as a four-lane result. If any dispatch fails, the command returns a loud error and stops — there is no fallback to self-synthesis.
 
+#### Bring your own review lanes
+
+The four built-in lanes are a floor, not a ceiling. Any project can plug in its **own** specialized reviewers — a SQL-migration reviewer, a Terraform reviewer, an accessibility reviewer — without forking the plugin. Drop a **read-only** agent file at `.claude/agents/<name>-reviewer.md` (in the repo whose code you review, or `~/.claude/agents/` for a personal one), with one required field in its frontmatter:
+
+```yaml
+---
+name: sql-reviewer
+description: "Reviews SQL migrations for lock contention and irreversible DDL."
+tools: [Read, Grep, Glob, Bash]   # keep it read-only — lanes must not write to the repo
+reviewLane: true          # the only required field — marks this as a review lane
+appliesTo: ["**/*.sql", "**/migrations/**"]   # optional: only run when these paths change
+lane: code                # optional: code | spec | plan | diff-only for plugin-enforced isolation
+required: false           # optional: true = a non-run forces the verdict to BLOCKED
+---
+```
+
+`/code-review` globs for `*-reviewer.md` lanes, matches each against the diff's shape, and dispatches the matches as **additional** parallel lanes alongside the built-in four. The plugin grows a socket; your project brings the plug. The guarantees that make this safe:
+
+- **Additive only.** Project lanes only *add* findings; they never replace or weaken a built-in lane's inputs or dispatch.
+- **Best-effort, never fatal.** A lane that's missing, broken, or errors out is reported and dropped — the four built-ins always run. A review with zero working project lanes is exactly the review you get today. (The socket imposes no timeout, so keeping a lane responsive is your responsibility — a hung lane holds up the review.)
+- **Never silent.** A declared lane that doesn't run **degrades the verdict headline**, and a `required` lane that doesn't run **blocks** it — so a green check can't hide an un-run lane.
+- **Read-only and trust-gated.** Lanes must be read-only, and `/code-review` confirms discovered lanes before dispatching when the target repo isn't your own session's project (they execute repo-supplied instructions with your tool access).
+
+The full convention — `appliesTo`/`lane` semantics, the input bundle each `lane` receives, the `required` gate, and the failure taxonomy — is in `shared/review-lanes.md`, with a copy-and-fill template at `shared/templates/custom-reviewer.md`.
+
 `/implement` dispatches `quality-scanner` directly after each task for a fast intent-blind quality check. `/simplify` dispatches it in `simplify` mode for complexity analysis. Both bypass the full four-lane review because the question they're asking is local to the code at hand.
 
 ### MCP Server Inheritance

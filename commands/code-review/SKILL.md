@@ -11,17 +11,23 @@ This skill's entire value comes from dispatching four intent-isolated sub-agents
 
 **You MUST:**
 1. Dispatch all four sub-agents via the Task tool, using their **plugin-namespaced** names: `sdd-planner:drift-detector`, `sdd-planner:quality-scanner`, `sdd-planner:spec-compliance`, `sdd-planner:blind-spot-finder`.
-2. Dispatch them **in parallel** — a single message containing four Task tool calls.
+2. Dispatch them **in parallel** — a single message containing the four built-in Task tool calls, plus one additional Task call for each matching project review lane (see Step 2e and Step 3).
 3. Give each sub-agent only the inputs for its lane. See Step 3 below for the exact input map. Passing extra context destroys the intent isolation that makes the review worthwhile.
-4. Wait for all four to return, then synthesize.
+4. Wait for all dispatched lanes (the four built-ins plus any project lanes) to return, then synthesize.
 
 **You MUST NOT:**
 1. Read the full diff, the phase doc contents, spec contents, or design contents in the primary context and write findings yourself. That is a single-pass review cosplaying as a four-lane review. It is the bug this contract exists to prevent.
 2. Skip the Task dispatch because "you already know the answer" after loading context. The answer you'd produce is exactly the single-pass review this skill exists to replace.
 3. Fall back to self-synthesis if a Task dispatch fails. If dispatch fails, **STOP** and return a loud error to the user describing which sub-agent failed and why. Do not silently continue.
-4. Use bare sub-agent names (`drift-detector`, `quality-scanner`, etc.) in Task calls — plugin agents require the `sdd-planner:` prefix or they will not resolve.
+4. Use bare sub-agent names (`drift-detector`, `quality-scanner`, etc.) for the **four built-in** lanes in Task calls — plugin agents require the `sdd-planner:` prefix or they will not resolve. (Project lanes are the exception — they resolve by bare name; see the external-lanes block below.)
 
-If you find yourself reading a spec file or running `git diff` against the full patch in the primary context, stop. That work belongs in the sub-agents, not here.
+**External review lanes (best-effort, additive).** Beyond the four, a project can plug in its own specialized lanes via the socket defined in `shared/review-lanes.md` (e.g. a read-only `.claude/agents/sql-reviewer.md` carrying `reviewLane: true`). These are **additive, read-only, and never abort the four**:
+- The four built-ins are the floor and always run. A project lane only ever *adds* findings — never removes, replaces, or weakens a built-in lane's inputs or dispatch.
+- A project lane that fails to dispatch, errors, or is malformed is **recorded and dropped** — never aborts the four. The strict "STOP on dispatch failure" rule in this contract applies to the **four built-ins only**. Synthesis proceeds over the four plus whatever project lanes returned. (Lane *responsiveness* is the project's responsibility — the socket dispatches and waits; it imposes no timeout, so a lane that hangs will hold up the review.)
+- Failure is **not silent**: a declared lane that didn't run **degrades the verdict headline**, and an opt-in `required: true` lane that didn't run **forces the verdict to BLOCKED** (it gates the verdict, not the floor). The verdict is computed from the four plus any *successful* project lanes.
+- Lanes execute repo-supplied instructions with session tool access, so `/code-review` **confirms discovered lanes** with the user before dispatch when the target repo isn't the session's own project.
+
+If you find yourself reading a spec file or running `git diff` against the full patch in the primary context, stop. That work belongs in the sub-agents, not here. (Listing changed file *paths* with `--name-only` for `appliesTo` matching is allowed — that's paths, not content.)
 
 ## Path Resolution
 **Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
@@ -54,6 +60,8 @@ A single reviewer juggling plan, specs, designs, code, and adversarial perspecti
 
 Each runs in its own fresh context. The whole point is that one reviewer's framing cannot contaminate another's.
 
+Projects can add their own specialized lanes on top of these four via the socket in `shared/review-lanes.md` (drop a `.claude/agents/*-reviewer.md` with `reviewLane: true`). Project lanes are **additive** — they never replace or weaken the built-in four, and their failure never fails the review.
+
 **`blind-spot-finder`'s diff-only guarantee is the sharpest and most fragile of these.** If you, as the primary orchestrator, read the plan before you dispatch it, your synthesis of its output will inevitably carry plan-aware framing back into the "blind-spot" conclusions. Keep your own reads shallow — file paths only, not contents — until after the sub-agents return.
 
 ## Process
@@ -80,6 +88,14 @@ To dispatch the sub-agents with the right inputs, you need a little bit of infor
 
 **d. Language-verification note (optional).** If `shared/language-verification.md` exists and the project language warrants structural checks, pass a one-line note to `drift-detector` and `quality-scanner` so they can flag missing sanitizers/static-analysis/type-checking work. You do not need to read the full language-verification doc — just detect the project language from a quick file-extension glance at the target repo and include it as context.
 
+**e. Discover project review lanes (optional socket).** Read `shared/review-lanes.md` first — it is the full convention; this is its operational summary. Glob, **non-recursively**, the **target repo's** top-level `.claude/agents/*-reviewer.md` and the user's `~/.claude/agents/*-reviewer.md`, de-duplicating by bare `name`. From each match read **only the socket fields** — `reviewLane`, `lane`, `appliesTo`, `required` — and **not** the `description` or body. (Reading intent-laden frontmatter pre-dispatch would violate the contents-blindness rule above; the `description` is not needed to dispatch.) Keep those whose `reviewLane` is boolean `true` (the filename is only a hint — the marker is the opt-in, and it is what keeps a project's `plan-reviewer`/`spec-reviewer` *overrides* from being mistaken for lanes). For each kept reviewer:
+   - **Validate** — drop as **Malformed** (report later, do not dispatch): `reviewLane` present but not boolean `true`; `lane` of an invalid type; a bare `name` equal to a built-in (`drift-detector`/`quality-scanner`/`spec-compliance`/`blind-spot-finder`); or two discovered files resolving to the same bare `name`.
+   - **Dispatch gate.** If it declares `appliesTo` (a list of minimatch/globstar globs, repo-root-relative, case-sensitive), get the changed file *paths* via the VCS-appropriate name-only listing run with **cwd = target repo** (`git -C <target> diff --name-only <base>..<head>`, or `p4` + `p4 where` for depth→relative paths — see `shared/review-lanes.md`). Paths only, never hunk content. Keep the lane only if some glob matches; otherwise mark it **Skipped** and remember the tested paths. `appliesTo: []` always Skips; absent `appliesTo` always dispatches and self-scopes.
+   - **Input bundle.** Match `lane` exact-lowercase. Recognized values (`code`/`spec`/`plan`/`diff-only`) get the **same** curated bundle as the matching built-in. An absent or unrecognized `lane` gets base inputs only (target repo path, VCS label, diff command) and self-gathers the rest. Group reviewers sharing the same unrecognized `lane`. Record any `required: true`.
+   - **Trust gate.** If the target repo is **not** the session's own project, these are externally-supplied instructions executing with session tool access — **list the discovered lanes and ask the user to confirm** before dispatching. Even when it is the session project, name the discovered lanes to the user.
+
+   If there are no project reviewers, this step is a no-op and the review runs the four built-ins exactly as before.
+
 At the end of Step 2, you should have:
 - Plan path, phase doc path
 - Spec paths (list), design paths (list)
@@ -87,12 +103,15 @@ At the end of Step 2, you should have:
 - Target repo path
 - Resolved diff scope as a concrete git command/range
 - Optional language-verification note
+- Project review lanes to dispatch (list) — each with its resolved input bundle, lane grouping, and `required` flag
+- Project lanes Skipped or Malformed at discovery (with reason + the paths a Skip was tested against), to report in Step 5
+- Changed file paths (name-only listing, target-repo-relative) — only if some project lane declared `appliesTo`
 
-You should NOT have read any spec contents, design contents, diff hunks, or the body of the phase doc.
+You should NOT have read any spec contents, design contents, diff hunks, the body of the phase doc, or any project reviewer's `description`/body. (Changed file *paths* from a `--name-only` listing are fine — they are not hunk content.)
 
-### 3. Dispatch All Four Sub-Agents in Parallel
+### 3. Dispatch All Lanes in Parallel
 
-**This is the step the contract at the top of this file is about.** Send a single message containing four Task tool calls. Each uses the plugin-namespaced name. Each receives only the inputs for its lane.
+**This is the step the contract at the top of this file is about.** Send a single message containing the four built-in Task tool calls, plus one Task call per matching project lane from Step 2e. The four built-ins use the plugin-namespaced name. Each lane receives only the inputs for its lane.
 
 **Task call 1 — `sdd-planner:drift-detector`**
 - Plan path, phase doc path
@@ -124,9 +143,15 @@ You should NOT have read any spec contents, design contents, diff hunks, or the 
 - Resolved diff command
 - ❌ Do NOT pass anything else. Not the plan, not the specs, not the designs, not the phase doc, not even the language-verification note. The diff-only guarantee is this reviewer's entire contribution.
 
-Wait for all four to return before continuing.
+**Task calls 5..N — project review lanes (if any, from Step 2e).** In the *same* message, add one Task call per matching project lane. For each:
+- `subagent_type` is the reviewer's **bare `name`** (project agents resolve by bare name — do **not** add the `sdd-planner:` prefix).
+- Pass the input bundle its `lane` resolved to: a recognized `lane` (`code`/`spec`/`plan`/`diff-only`) gets the **same** inputs as the matching built-in above; an absent or unrecognized `lane` gets only the base inputs (target repo path, detected VCS label, resolved diff command) and is left to gather anything else itself.
+- ❌ Do NOT hand a standalone or unrecognized lane the plan, specs, or designs — it gets base inputs only; if it wants intent, it reads it itself. ✅ Do hand a recognized-lane reviewer exactly the bundle that lane names, and nothing more.
+- Hand every lane the **frozen** diff reference (fixed base/head — a commit SHA where the VCS allows) so a lane can't shift what the built-ins review. Project lanes are **read-only**; they must not write to the repo.
 
-**If any Task call fails or returns an error** (e.g., "unknown subagent_type"), stop immediately and return a loud error to the user:
+Wait for all dispatched lanes to return before continuing. The socket imposes no timeout on project lanes — keeping them fast is the project's responsibility (a hung lane will hold up the review).
+
+**If a built-in Task call (one of the four above) fails or returns an error** (e.g., "unknown subagent_type"), stop immediately and return a loud error to the user:
 
 ```
 ERROR: /code-review could not dispatch sub-agent `sdd-planner:<name>`.
@@ -136,11 +161,13 @@ The four-lane review cannot proceed. Fix the dispatch issue and re-run.
 
 **Do NOT** fall back to self-synthesis. A single-pass review pretending to be a four-lane review is worse than no review at all — it gives the user false confidence in an un-triangulated report.
 
-### 4. Synthesize the Four Reports
+**Project-lane failures are different — never abort the four.** If a project lane (Task calls 5..N) fails, do **not** stop. Record its outcome and continue synthesizing the rest. Classify each per `shared/review-lanes.md`: **Skipped** (no `appliesTo` match — quiet, show the tested paths), **Failed to dispatch**, **Errored**, **Oversized** (truncate with a note), or **Malformed**. For **Failed to dispatch**, name the discovered file and its declared `name` and state the cause is *either* a name/file mismatch *or* this repo's agents not being registered in this session — **do not assert which** (you read the frontmatter, so you know the file exists, but not why `Task` couldn't resolve it). The four built-ins remain the floor; a broken project lane degrades coverage, it does not fail the four — but the degradation must surface in the verdict (Step 4h/Step 5), never only in a sub-section.
 
-Once all four reports are in hand, produce a single unified review. Synthesis is the whole value-add of this step — it is not concatenation.
+### 4. Synthesize the Reports
 
-**a. Build a findings table.** Enumerate every finding from all four reports. For each, record: source agent, severity, location, one-line summary.
+Once all dispatched lanes have returned, produce a single unified review over **all** their reports — the four built-ins plus any project lanes that returned. Synthesis is the whole value-add of this step — it is not concatenation.
+
+**a. Build a findings table.** Enumerate every finding from all returned reports (built-in and project lanes). For each, record: source agent, severity, location, one-line summary.
 
 **b. Detect agreements.** Findings that multiple reviewers hit independently are high-confidence. Flag them as **Confirmed by N reviewers**. When `drift-detector` says a task is missing and `spec-compliance` says the requirement is uncovered, that's the same hole seen from two angles — strong signal.
 
@@ -157,6 +184,16 @@ Disagreements get their own section in the output. Never quietly reconcile them 
 
 **f. Deduplicate.** When multiple reviewers report the same issue from the same angle, collapse them into one entry and list the sources. Don't double-count in severity tallies.
 
+**g. Fold in project lanes.** Treat each project lane's findings like any built-in lane's for agreement, disagreement, and dedup, with three rules:
+- **Within-lane grouping.** Reviewers sharing the same unrecognized `lane` are peers in one lane — present them under one heading, and for the "Confirmed by N reviewers" tally **count the lane group as a single source** (two `security` peers agreeing is one corroborated Security finding, not "confirmed by 2").
+- **Identity by dispatch, not by string.** Key the "Blind Spots Only `blind-spot-finder` Caught" section and the per-lane sections on the **dispatched identity** (the namespaced built-in, or the project lane's resolved name), never a bare matched string. A project lane cannot be mistaken for a built-in — a name collision was already rejected as Malformed in Step 2e.
+- **Recognized lanes stay in their bundle.** If a recognized-lane reviewer (`code`/`spec`/`plan`/`diff-only`) asserts a finding about an artifact it was not granted (e.g. a `spec` lane claiming "the plan requires X"), demote that claim to a **Question** — it spoke outside its inputs.
+
+**h. Compute the verdict, then degrade it visibly.** The Overall Verdict and counts come from the four built-ins plus any *successfully returned* project lanes — a lane that failed to run is a coverage gap, not a finding, and never drags the verdict down on its own. But the gap must not be silent:
+- If any **declared** project lane did not run (Failed to dispatch / Errored / Oversized-to-unusable / Malformed — **not** Skipped), append `(DEGRADED — N declared lane(s) did not run: <names>)` to the verdict line.
+- If a **`required`** lane did not run, force the verdict to `BLOCKED — required lane <name> did not run`, overriding an otherwise-passing headline. The four still ran and their findings still stand; BLOCKED reflects that a gate the project declared mandatory was not satisfied.
+- A purely **Skipped** lane (no matching changed paths) degrades nothing — it had nothing to review.
+
 **Do NOT introduce new findings of your own during synthesis.** Your job is to synthesize what the four sub-agents returned, not to add findings based on your own reading. If you notice something none of the four agents caught, it means one of the agents needs to be improved — note it in an "Orchestrator Observations" addendum rather than silently inserting it as a finding.
 
 ### 5. Present the Unified Review to the User
@@ -170,13 +207,23 @@ Render the synthesis in the output format below. Include the raw sub-reports ver
 
 ### Overall Verdict
 **Alignment:** Strong | Moderate | Weak
+**Lane status:** OK | DEGRADED (N declared lane(s) did not run: …) | BLOCKED (required lane … did not run)
 **Critical issues:** [count]
 **Top items to address:** [prioritized list of 3–7]
 
 ### Diff Scope
 - Commits reviewed: [range, count]
 - Files changed: [count]
-- Reviewers dispatched: sdd-planner:drift-detector, sdd-planner:quality-scanner, sdd-planner:spec-compliance, sdd-planner:blind-spot-finder
+- Reviewers dispatched: sdd-planner:drift-detector, sdd-planner:quality-scanner, sdd-planner:spec-compliance, sdd-planner:blind-spot-finder[, plus any project lanes by name]
+
+### Project Review Lanes
+[Include this section only if the project supplied lanes via the socket. Omit it entirely if there were none — never show an empty section.]
+- **Ran:** [lane name(s) that returned a report; mark any `required` ones]
+- **Skipped (no matching changed paths):** [name — tested against: path, path, … | "none"]
+- **Failed to dispatch:** [name (declared `name: X`) — name/file mismatch *or* not registered this session | "none"]
+- **Errored:** [name + error | "none"]
+- **Oversized (truncated):** [name | "none"]
+- **Malformed:** [name + reason, e.g. "name collides with built-in" | "none"]
 
 ### Confirmed Findings (agreed by 2+ reviewers)
 These findings were caught independently by multiple lanes — high confidence.
@@ -219,6 +266,9 @@ Findings from the adversarial reviewer that no other lane surfaced. Pay these sp
 ### Spec Compliance (from spec-compliance)
 [Unique findings from spec-compliance]
 
+### Project Lanes
+[Unique findings from each project lane that weren't confirmed or disagreed elsewhere. One sub-heading per lane; reviewers sharing an unrecognized `lane` are grouped under that lane's name. Omit this section if there were no project lanes.]
+
 ### Open Questions
 Findings raised as unverified suspicions by one or more reviewers that couldn't be cross-validated. Surface so the user can decide.
 
@@ -247,6 +297,12 @@ Findings raised as unverified suspicions by one or more reviewers that couldn't 
 <summary>blind-spot-finder report</summary>
 
 [paste the full blind-spot-finder report]
+</details>
+
+<details>
+<summary>[project-lane-name] report</summary>
+
+[paste each project lane's full report — one block per lane that returned. Omit if there were none.]
 </details>
 ```
 
@@ -289,6 +345,7 @@ No new artifact is created. This skill produces an inline review presented to th
 
 ## Context
 - Orchestration: `shared/orchestration.md`
+- Project review-lane socket: `shared/review-lanes.md` (template: `shared/templates/custom-reviewer.md`)
 - Schema: `shared/frontmatter-schema.md`
 - Target plan: `Plans/<PlanName>/` (status: `active`)
 - Related specs: `Specs/`
