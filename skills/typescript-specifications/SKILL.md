@@ -1,3 +1,9 @@
+---
+name: typescript-specifications
+description: "Structural verification for TypeScript and JavaScript — tsc --noEmit, linter (eslint/biome). Load when planning, implementing, or reviewing TypeScript/JavaScript code (.ts, .tsx, .js, .jsx; tsconfig.json, package.json)."
+disable-model-invocation: true
+---
+
 # TypeScript / JavaScript — Structural Verification
 
 ## Tools

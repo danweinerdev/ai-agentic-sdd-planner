@@ -1,3 +1,9 @@
+---
+name: rust-specifications
+description: "Structural verification for Rust — clippy with warnings-as-errors, miri for unsafe/FFI. Load when planning, implementing, or reviewing Rust code (.rs; Cargo.toml)."
+disable-model-invocation: true
+---
+
 # Rust — Structural Verification
 
 ## Tools

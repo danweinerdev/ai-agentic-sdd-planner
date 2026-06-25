@@ -13,6 +13,8 @@ sdd-planner/                      # Repository root = plugin root
 ├── planning-config.json          # Planning configuration
 ├── .gitignore
 ├── commands/                     # Slash commands (auto-namespaced /sdd-planner:*); each is a dir with SKILL.md inside
+├── skills/                       # Model-only reference skills (auto-loaded by description, not /-invocable)
+│   └── <lang>-specifications/    # Per-language structural verification (cpp, rust, go, python, typescript, java, swift)
 ├── agents/                       # Subagent definitions
 ├── shared/
 │   ├── frontmatter-schema.md     # Single source of truth for artifact metadata
@@ -101,6 +103,16 @@ Always use templates from `shared/templates/` when creating new artifacts. Repla
 | `/sdd-planner:diagram` | Generate Mermaid diagrams from artifacts |
 | `/sdd-planner:excavate` | Progressive codebase discovery → `Research/<slug>.md` |
 | `/sdd-planner:setup` | Set up a repo — generates planning-config.json, bootstraps directories, creates launcher |
+
+### Model-only reference skills (`skills/`)
+
+The `skills/` directory holds reference skills that are **not** user-invocable slash commands. Each carries `disable-model-invocation: true`, so it never appears in the `/sdd-planner:*` namespace, but the model auto-loads its body (progressive disclosure) when the task matches its `description`. They package on-demand reference that lifecycle skills used to read inline.
+
+| Skill | Loads when |
+|-------|-----------|
+| `<lang>-specifications` (`cpp`, `rust`, `go`, `python`, `typescript`, `java`, `swift`) | Planning, implementing, or reviewing code in that language — supplies structural-verification tools and quality patterns. Coordinated by `shared/language-verification.md`. |
+
+Restricted agents (e.g. the intent-isolated reviewers) don't get the main session's auto-loading, so they read a skill's `SKILL.md` body as a plain file when they need it.
 
 ## Agents
 

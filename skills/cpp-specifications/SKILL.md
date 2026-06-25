@@ -1,3 +1,9 @@
+---
+name: cpp-specifications
+description: "Structural verification and quality patterns for C and C++ — sanitizers (ASAN/UBSAN/TSAN/MSAN), const correctness, ownership, thread safety, modern idioms. Load when planning, implementing, or reviewing C/C++ code (.c, .cc, .cpp, .h, .hpp; CMake, Makefile)."
+disable-model-invocation: true
+---
+
 # C / C++ — What Good Looks Like
 
 ## Sanitizers

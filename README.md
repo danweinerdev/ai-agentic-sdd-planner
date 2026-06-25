@@ -342,6 +342,14 @@ sdd-planner/                       # The plugin itself (not your project)
 │   ├── simplify/SKILL.md
 │   ├── specify/SKILL.md
 │   └── tend/SKILL.md
+├── skills/                       # Model-only reference skills (auto-loaded by description, not /-invocable)
+│   ├── cpp-specifications/SKILL.md
+│   ├── go-specifications/SKILL.md
+│   ├── java-specifications/SKILL.md
+│   ├── python-specifications/SKILL.md
+│   ├── rust-specifications/SKILL.md
+│   ├── swift-specifications/SKILL.md
+│   └── typescript-specifications/SKILL.md
 ├── agents/                       # Review agents
 │   ├── blind-spot-finder.md
 │   ├── code-implementer.md

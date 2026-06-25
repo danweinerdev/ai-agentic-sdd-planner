@@ -1,14 +1,14 @@
 # Language-Specific Verification — What Good Looks Like
 
-What "good and complete" looks like beyond passing tests. Each language file covers **structural verification tools** (sanitizers, static analysis, type checkers) and **quality patterns** (idioms, safety conventions, review checkpoints) specific to that language. These run during implementation, not as deferred acceptance criteria.
+What "good and complete" looks like beyond passing tests. The per-language detail lives in **model-only skills** (`skills/<lang>-specifications/`), each covering **structural verification tools** (sanitizers, static analysis, type checkers) and **quality patterns** (idioms, safety conventions, review checkpoints) specific to that language. These run during implementation, not as deferred acceptance criteria.
 
 ## How to Use
 
-1. Detect the project language from file extensions, build files, or project config
-2. Read the matching file from `shared/languages/`
-3. Include the relevant checks in your output (verification fields, testing strategy, review findings)
+1. Detect the project language from file extensions, build files, or project config.
+2. Apply the matching `<lang>-specifications` skill. In the **primary context** the skill auto-loads by description when you're planning, implementing, or reviewing that language — its body arrives without an explicit read. In a **restricted agent context** (or to load it deliberately), read the skill body directly from `skills/<lang>-specifications/SKILL.md` in the plugin directory.
+3. Include the relevant checks in your output (verification fields, testing strategy, review findings).
 
-When a project uses multiple languages, read and apply each relevant file.
+When a project uses multiple languages, apply each relevant skill.
 
 ## Skill Integration
 
@@ -19,15 +19,15 @@ When a project uses multiple languages, read and apply each relevant file.
 
 ## Languages
 
-| Language | File |
-|----------|------|
-| C / C++ | `shared/languages/cpp.md` |
-| Rust | `shared/languages/rust.md` |
-| Go | `shared/languages/go.md` |
-| Python | `shared/languages/python.md` |
-| TypeScript / JavaScript | `shared/languages/typescript.md` |
-| Java / Kotlin | `shared/languages/java.md` |
-| Swift | `shared/languages/swift.md` |
+| Language | Skill |
+|----------|-------|
+| C / C++ | `skills/cpp-specifications/SKILL.md` |
+| Rust | `skills/rust-specifications/SKILL.md` |
+| Go | `skills/go-specifications/SKILL.md` |
+| Python | `skills/python-specifications/SKILL.md` |
+| TypeScript / JavaScript | `skills/typescript-specifications/SKILL.md` |
+| Java / Kotlin | `skills/java-specifications/SKILL.md` |
+| Swift | `skills/swift-specifications/SKILL.md` |
 
 ## Unlisted Languages
 

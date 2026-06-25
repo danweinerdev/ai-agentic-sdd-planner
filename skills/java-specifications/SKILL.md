@@ -1,3 +1,9 @@
+---
+name: java-specifications
+description: "Structural verification for Java and Kotlin — SpotBugs/Error Prone, Detekt. Load when planning, implementing, or reviewing Java/Kotlin code (.java, .kt; build.gradle, pom.xml)."
+disable-model-invocation: true
+---
+
 # Java / Kotlin — Structural Verification
 
 ## Tools
