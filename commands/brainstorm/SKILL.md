@@ -6,13 +6,7 @@ description: "Explore possibilities for a problem or opportunity with structured
 # /brainstorm — Explore Possibilities
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 When you need to generate and evaluate multiple approaches to a problem before committing to one. Good for architecture decisions, feature approaches, or tool selection.
@@ -20,15 +14,11 @@ When you need to generate and evaluate multiple approaches to a problem before c
 ## Process
 
 1. **Define Problem**
-   - Ask what problem or opportunity to explore
+   - If the user hasn't already specified it, ask what problem or opportunity to explore
    - Clarify constraints and evaluation criteria
 
 2. **Gather Context**
-   - Invoke the `sdd-planner:researcher` agent to gather context on the problem space:
-     - Check `Research/` and `Brainstorm/` for prior work on related topics
-     - Check `Specs/` for related specifications
-     - Check `Designs/` for related architecture docs
-     - Review the codebase for relevant existing code
+   - Invoke `sdd-planner:researcher` with the problem statement and constraints; it scans all artifact directories and the codebase per its own definition.
    - The agent returns a structured summary of relevant context
 
 3. **Generate Ideas**
@@ -38,13 +28,16 @@ When you need to generate and evaluate multiple approaches to a problem before c
    - Consider both conventional and creative approaches
 
 4. **Evaluate**
-   - Create `Brainstorm/<topic-slug>.md` using `shared/templates/brainstorm.md`
+   - Create `Brainstorm/<topic-slug>.md` using `shared/templates/brainstorm.md` (`<topic-slug>` is lowercase kebab-case, e.g., `auth-token-rotation`)
    - Build a comparison matrix against the criteria
    - Where architectural approaches are compared, use Mermaid diagrams to illustrate key differences
    - Make a recommendation with rationale
 
 5. **Link**
    - Add cross-references to related research or specs in `related` frontmatter
+
+6. **Finalize**
+   - Set `status: active` in the frontmatter once the document is complete and presented to the user. Then re-read the frontmatter and confirm it parses as YAML and includes `title`, `type`, `status`, `created`, `updated`, `tags`, `related`.
 
 ## Output
 ```

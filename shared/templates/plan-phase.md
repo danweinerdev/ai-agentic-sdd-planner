@@ -21,5 +21,12 @@ tasks: []
 ## Overview
 Brief description of what this phase delivers.
 
+## {{PHASE_NUM}}.1: {{TASK_TITLE}}
+
+### Subtasks
+- [ ] {{SUBTASK}}
+
+### Notes
+
 ## Acceptance Criteria
 - [ ]

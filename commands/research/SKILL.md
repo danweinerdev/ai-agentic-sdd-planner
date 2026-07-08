@@ -6,13 +6,7 @@ description: "Investigate a topic and produce a structured research document. Tr
 # /research — Investigate a Topic
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 When you need to gather and synthesize information about a topic before making decisions. Good for technology evaluations, understanding existing systems, or exploring unknowns.
@@ -20,7 +14,7 @@ When you need to gather and synthesize information about a topic before making d
 ## Process
 
 1. **Define Scope**
-   - Ask what topic to research and what questions need answering
+   - If the user hasn't already specified it, ask what topic to research and what questions need answering
    - Determine if this is codebase research, external research, or both
 
 2. **Gather Information**
@@ -28,13 +22,16 @@ When you need to gather and synthesize information about a topic before making d
    - The agent will scan existing artifacts, codebase, and web as needed
 
 3. **Synthesize**
-   - Create `Research/<topic-slug>.md` using `shared/templates/research.md`
+   - Create `Research/<topic-slug>.md` using `shared/templates/research.md` (`<topic-slug>` is lowercase kebab-case, e.g., `auth-token-rotation`)
    - Organize findings into Context, Key Insights, Sources, Analysis
    - Highlight implications and recommendations
    - List open questions that remain
 
 4. **Link**
    - Add cross-references to related artifacts in the `related` frontmatter field
+
+5. **Finalize**
+   - Set `status: active` in the frontmatter once the document is complete and presented to the user. Then re-read the frontmatter and confirm it parses as YAML and includes `title`, `type`, `status`, `created`, `updated`, `tags`, `related`.
 
 ## Output
 ```

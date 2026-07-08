@@ -6,13 +6,7 @@ description: "Create a technical architecture and design document. Do NOT enter 
 # /design — Technical Architecture Document
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 When you need to define the technical architecture for a component or system before implementation. Produces a reviewable design document with architecture decisions.
@@ -20,11 +14,8 @@ When you need to define the technical architecture for a component or system bef
 ## Process
 
 1. **Gather Context**
-   - Ask what component to design
-   - Invoke the `sdd-planner:researcher` agent to gather context:
-     - Related specifications from `Specs/`
-     - Existing architecture from `Designs/`
-     - Current codebase patterns
+   - If the user hasn't already specified it, ask what component to design
+   - Invoke `sdd-planner:researcher` with the component and its constraints; it scans all artifact directories and the codebase per its own definition.
    - Review any related research documents
 
 2. **Draft Design**
@@ -35,13 +26,14 @@ When you need to define the technical architecture for a component or system bef
    - Set status to `draft`
 
 3. **Review**
+   - Set `status: review` when dispatching the reviewer
    - Invoke the `sdd-planner:plan-reviewer` agent to review the design
    - Address critical and major issues
-   - Update status to `review` once addressed
 
 4. **Present for Approval**
    - Show the user the review results and final design
-   - If approved, set status to `approved`
+   - After findings are addressed and the user explicitly approves, set `status: approved`. If the user declines or defers, leave it at `review`.
+   - Then re-read the frontmatter and confirm it parses as YAML and includes `title`, `type`, `status`, `created`, `updated`, `tags`, `related`.
 
 ## Output
 ```

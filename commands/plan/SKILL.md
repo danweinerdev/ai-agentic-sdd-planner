@@ -6,13 +6,7 @@ description: "Create or expand a structured implementation plan with phases, tas
 # /plan — Create or Expand an Implementation Plan
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 - When you need to break down a feature, project, or initiative into an actionable plan with phases, tasks, subtasks, and verification criteria.
@@ -24,8 +18,8 @@ Both cases run through the same process below. The skill detects whether the nam
 
 ### 1. Determine Mode (Create vs Revise)
 
-- Ask the user what they want to plan (feature name, scope, goals).
-- If `Plans/<PlanName>/README.md` already exists, switch to **Revise mode** — load the existing README and phase docs into context and proceed to step 2.
+- If the user hasn't already specified it, ask what they want to plan (feature name, scope, goals).
+- If `Plans/<PlanName>/README.md` already exists, switch to **Revise mode** — load the README and only the phase docs in scope for this revision into context (delegate a full-plan sweep to the researcher step instead of reading every phase doc yourself) and proceed to step 2.
 - Otherwise, you're in **Create mode** — proceed to step 2 with no existing plan to load.
 
 If the existing plan's `status` is `complete` or `archived`, confirm with the user before revising it — those plans are usually frozen.
@@ -37,7 +31,7 @@ Invoke the `sdd-planner:researcher` agent and ask it to return a **structured** 
 - **Relevant requirements** — spec items under `Specs/` that this plan should cover
 - **Architectural constraints** — design decisions in `Designs/`, component boundaries, interfaces, contracts that constrain implementation
 - **Background** — research, brainstorms, retros bearing on this work
-- **Related plans** — other plans in `Plans/` that touch the same area (filter by `status` — usually `active`, `approved`, and recent `complete`)
+- **Related plans** — other plans in `Plans/` that touch the same area (filter by `status` — usually `active`, `approved`, and plans completed within roughly the last three months; tell the researcher explicitly to include the latter, since it skips `complete` plans by default)
 - **Existing code** — implementations already present in the target repo that this plan would extend, modify, or replace
 - **Current coverage and gaps** — in Revise mode, what the existing tasks and subtasks already address, and what's missing, vague, or contradicted by the latest specs/designs. In Create mode, this comes through as "which spec requirements have no plan covering them yet."
 
@@ -47,7 +41,7 @@ Use this structured summary as the input to step 3 — every drafting decision s
 
 **Create mode:**
 - Determine the plan name (PascalCase, no spaces).
-- Break work into 3-7 phases, each with a clear deliverable.
+- Break work into phases with clear deliverables — typically 3-7 for a substantial feature. A small feature may legitimately be a single phase; never pad with filler phases.
 - Each phase gets 2-6 tasks.
 - Identify dependencies between phases.
 
@@ -67,7 +61,7 @@ Use this structured summary as the input to step 3 — every drafting decision s
 **Create mode:**
 - Create `Plans/<PlanName>/README.md` using `shared/templates/plan-readme.md` with `status: draft`.
 - Create numbered phase docs using `shared/templates/plan-phase.md`.
-- Create `Plans/<PlanName>/notes/` directory for future debriefs.
+- Create `Plans/<PlanName>/notes/` directory for future debriefs. Drop a `.gitkeep` (or VCS-equivalent placeholder) inside so the empty directory survives cloning.
 - Populate frontmatter with all phase/task metadata.
 
 **Revise mode:**
@@ -93,7 +87,8 @@ Shallow tasks with no subtasks or notes are not acceptable output — they're th
 - Address any issues raised by the reviewer.
 - Once review passes:
   - **Create mode:** update the plan README frontmatter `status` to `approved`.
-  - **Revise mode:** leave `status` as-is — the plan was already past draft.
+  - **Revise mode:** if `status` is `draft`, set it to `approved` once the review passes (same as Create mode — a re-run on a never-approved plan must not strand it in `draft`); otherwise leave `status` as-is.
+- Then re-read the frontmatter and confirm it parses as YAML and includes `title`, `type`, `status`, `created`, `updated`, `tags`, `related`.
 
 ## Output
 ```
