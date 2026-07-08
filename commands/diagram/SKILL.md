@@ -6,13 +6,7 @@ description: "Generate Mermaid diagrams from plans, designs, or specs. Triggers:
 # /diagram — Generate Mermaid Diagrams
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 When you need a visual representation of architecture, data flow, task dependencies, or system interactions. Produces Mermaid diagrams that render in GitHub, VS Code, and most markdown viewers.
@@ -42,25 +36,16 @@ When you need a visual representation of architecture, data flow, task dependenc
    - Build the Mermaid source from the artifact data
    - Use clear, descriptive node labels
    - Group related nodes with `subgraph` where appropriate
-   - Use consistent styling: status colors are reused across diagrams
-     - Green (`:::complete`): complete / approved / implemented
-     - Amber (`:::active`): in-progress / active / review
-     - Gray (`:::planned`): planned / draft
-     - Red (`:::blocked`): blocked
+   - Use consistent styling: status colors are reused across diagrams, applied with `class NODE className` statements (paired with the `classDef` block below)
+     - Green (`class NODE complete`): complete / approved / implemented
+     - Amber (`class NODE active`): in-progress / active / review
+     - Gray (`class NODE planned`): planned / draft
+     - Red (`class NODE blocked`): blocked
+     - Dim gray (`class NODE muted`): deferred / archived / superseded
 
 4. **Place Diagram**
    - **In an existing artifact**: Add a `## Diagram` section to the relevant document
-   - **Standalone**: Create `Diagrams/<subject-slug>.md` with frontmatter:
-     ```yaml
-     ---
-     title: "Diagram Title"
-     type: diagram
-     created: YYYY-MM-DD
-     updated: YYYY-MM-DD
-     tags: [diagram-type]
-     related: [path/to/source/artifact]
-     ---
-     ```
+   - **Standalone**: Create `Diagrams/<subject-slug>.md` from `shared/templates/diagram.md`. Set `status: active` (diagram statuses are `draft`/`active`/`archived` — a generated, complete diagram starts `active`), `tags` to the diagram type, and `related` to the source artifact path.
 
 5. **Present to User**
    - Show the Mermaid source in a code block
@@ -92,6 +77,7 @@ classDef complete fill:#10b981,stroke:#059669,color:#fff
 classDef active fill:#f59e0b,stroke:#d97706,color:#fff
 classDef planned fill:#6b7280,stroke:#4b5563,color:#fff
 classDef blocked fill:#ef4444,stroke:#dc2626,color:#fff
+classDef muted fill:#374151,stroke:#1f2937,color:#9ca3af
 ```
 
 ## Output

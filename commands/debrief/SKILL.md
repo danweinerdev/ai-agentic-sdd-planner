@@ -6,13 +6,7 @@ description: "Write after-action notes for a completed plan phase. Triggers: /de
 # /debrief — After-Action Phase Notes
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 When a plan phase has been completed (or substantially completed) and you want to capture what happened: decisions made, deviations from plan, lessons learned, and impact on future phases.
@@ -29,6 +23,7 @@ When a plan phase has been completed (or substantially completed) and you want t
    - Review the phase's tasks and subtasks for completion status
    - Read related designs from `Designs/` to identify deviations from intended architecture
    - Read related specs from `Specs/` to assess requirements coverage
+   - If more than ~3 related documents are involved, delegate the sweep to `sdd-planner:researcher` instead of reading them all yourself
    - Ask the user about:
      - Key decisions made during implementation
      - What deviated from the original plan or design
@@ -48,6 +43,7 @@ When a plan phase has been completed (or substantially completed) and you want t
 
 4. **Write Debrief**
    - Create `Plans/<PlanName>/notes/<NN>-<Phase-Name>.md` using `shared/templates/debrief.md`
+   - Fill in the frontmatter: set `created` and `updated` to today, `tags` to themes from the phase, `related` to the specs/designs consulted in step 2, and choose `status` — `draft` if the debrief is being written incrementally and will be revisited, `complete` when finalized in one sitting
    - Fill in all sections: Decisions Made, Requirements Assessment, Deviations, Risks & Issues, Lessons Learned, Impact on Subsequent Phases, **Skill Opportunities**
    - The filename mirrors the phase doc number (e.g., `01-Core-Setup.md` -> `notes/01-Core-Setup.md`)
 

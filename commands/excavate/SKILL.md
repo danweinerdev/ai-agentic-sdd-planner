@@ -6,13 +6,7 @@ description: "Progressive codebase discovery and documentation. Triggers: /excav
 # /excavate — Progressive Codebase Discovery
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 When you need to understand an unfamiliar codebase or subsystem before planning work against it. Produces research artifacts from systematic code exploration — not a quick scan, but a deep dive that builds on itself.
@@ -37,7 +31,7 @@ When you need to understand an unfamiliar codebase or subsystem before planning 
    - Map the high-level architecture: what talks to what
 
 3. **Depth Passes**
-   Work through the codebase layer by layer. For each pass:
+   Work through the codebase layer by layer. For each pass, dispatch — or **resume** (per `shared/orchestration.md` principle 5) — the `sdd-planner:researcher` agent, passing the prior pass's findings as context. The primary context reviews each pass's summary, steers the next pass, and never reads the codebase wholesale itself.
 
    **Pass 1: Structure**
    - Module boundaries and dependency graph

@@ -6,13 +6,7 @@ description: "Artifact hygiene — verify statuses, unify tags, check convention
 # /tend — Artifact Hygiene
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 - Artifacts have accumulated and status is unclear
@@ -62,6 +56,7 @@ If `Plans/` already has plan directories directly under it and no status subfold
 
 | Mode | Purpose | Produces |
 |------|---------|----------|
+| `migrate` | Pre-flight legacy-layout migration (see above); also runs automatically before other modes when a legacy layout is detected | Layout: plans flat under `Plans/`, status in frontmatter |
 | `status` | Verify and update document status fields | Accuracy: documents reflect reality |
 | `tags` | Unify tag variants, find connections, identify clusters | Semantics: tags are consistent and meaningful |
 | `filenames` | Check naming conventions, suggest renames | Findability: names match content |
@@ -101,7 +96,7 @@ Invoke the `sdd-planner:researcher` agent to scan all plans under `Plans/` and c
 - Plans with status `active` but no phase has started → suggest reverting to `approved`
 - Phases where all tasks are complete but phase status is `in-progress` → suggest `complete`
 - Specs/designs marked `approved` but their plan is `complete` → suggest `implemented`
-- Research/brainstorm still `active` but older than 30 days with no recent changes → flag as potentially stale
+- Research/brainstorm still `active` but frontmatter `updated` more than 30 days before today → flag as potentially stale
 - Phase status `in-progress` but no task has started → flag inconsistency
 
 ### Tags Mode
@@ -119,6 +114,7 @@ Invoke the `sdd-planner:researcher` agent to check naming conventions across all
 - Research: `Research/<topic-slug>.md` (kebab-case)
 - Brainstorm: `Brainstorm/<topic-slug>.md` (kebab-case)
 - Retro: `Retro/YYYY-MM-DD-<slug>.md`
+- Diagrams: `Diagrams/<slug>.md` (kebab-case, type `diagram`; statuses `draft`/`active`/`archived`)
 - Phase numbering: zero-padded, sequential, no gaps
 
 ### Completeness Mode

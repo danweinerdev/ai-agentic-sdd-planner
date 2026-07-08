@@ -6,13 +6,7 @@ description: "Adversarial critical analysis of plans, specs, or designs. Trigger
 # /poke-holes — Adversarial Critical Analysis
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 When you need an **adversarial** critical review of a planning artifact before committing to it. Good for stress-testing plans before approval, finding gaps in specs, and challenging design assumptions. This is not a structural review (`sdd-planner:plan-reviewer` and `sdd-planner:spec-reviewer` handle that). This skill actively tries to break the thinking.
@@ -26,17 +20,15 @@ Think of it as the planning-artifact counterpart to `sdd-planner:blind-spot-find
    - Confirm the artifact path before proceeding
 
 2. **Gather Context**
-   Invoke the `sdd-planner:researcher` agent with these instructions:
-   - Read the full target artifact
-   - Read all documents referenced in its `related` frontmatter
+   Read the full target artifact yourself in the primary context (a single-artifact read is lightweight and the raw wording is the attack surface). Dispatch `sdd-planner:researcher` only for the *related-context sweep*:
+   - Read all documents referenced in the target's `related` frontmatter
    - Search for any specs, designs, or plans that reference this artifact (by filename or title)
    - Return a structured summary containing:
-     - The artifact's content, structure, and key claims
      - Related context that informs analysis (from `related` docs and reverse references)
      - Cross-references, dependencies, and any conflicts between documents
 
 3. **Adversarial Analysis**
-   Apply the lenses below to the researcher's summary. The posture is adversarial — you are not checking whether the artifact is well-structured, you are trying to find the thing that will blow up in six weeks. For every finding, produce a **concrete scenario**: a sequence of events, inputs, or conditions that exposes the flaw. "This is risky" is not a finding. "If the downstream service returns a 503 during step 3, the transaction is orphaned and the plan has no cleanup story" is a finding.
+   Apply the lenses below to the full artifact text you read, informed by the researcher's related-context summary. The posture is adversarial — you are not checking whether the artifact is well-structured, you are trying to find the thing that will blow up in six weeks. For every finding, produce a **concrete scenario**: a sequence of events, inputs, or conditions that exposes the flaw. "This is risky" is not a finding. "If the downstream service returns a 503 during step 3, the transaction is orphaned and the plan has no cleanup story" is a finding.
 
    **The Hostile Reader Lens**
    - Read the artifact assuming the author is wrong. Where does the argument crack first?
@@ -76,7 +68,7 @@ Think of it as the planning-artifact counterpart to `sdd-planner:blind-spot-find
    - Does the design promise something the plan doesn't schedule work for?
 
 4. **Validate Each Finding**
-   Before including a finding, sanity-check it against the researcher's summary:
+   Before including a finding, validate it against the **artifact text itself**; use the researcher's summary only for related-document checks:
    - Is the scenario you described actually reachable given what the artifact says?
    - Is the gap you found already addressed in a related document the researcher surfaced?
    - Would the finding hold up if the author pushed back?

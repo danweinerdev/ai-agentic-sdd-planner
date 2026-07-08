@@ -4,17 +4,19 @@ Single source of truth for all artifact metadata in this project.
 
 ## Common Fields
 
-Every artifact includes these fields:
+Every artifact includes these fields (one exception: `phase` docs omit `tags` and `related` — they inherit the plan's):
 
 ```yaml
 title: "Human-readable title"
-type: research | brainstorm | spec | design | plan | phase | debrief | retro
+type: research | brainstorm | spec | design | plan | phase | debrief | retro | diagram
 status: <type-specific, see below>
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 tags: [tag1, tag2]
-related: [path/to/related/artifact]
+related: [Specs/FeatureName, Research/topic-slug.md]
 ```
+
+`related` entries are planning-root-relative: use the **directory** path for specs, designs, and plans (`Specs/FeatureName`, `Designs/ComponentName`, `Plans/PlanName`), and the **file** path for flat artifacts (`Research/topic-slug.md`, `Brainstorm/topic-slug.md`, `Retro/YYYY-MM-DD-slug.md`, `Diagrams/slug.md`). Consumers that need the document behind a directory entry append `/README.md`.
 
 ## Status Values by Type
 
@@ -29,6 +31,7 @@ related: [path/to/related/artifact]
 | task | `planned`, `in-progress`, `complete`, `blocked`, `deferred` |
 | debrief | `draft`, `complete` |
 | retro | `draft`, `complete` |
+| diagram | `draft`, `active`, `archived` |
 
 ## Plan Schema
 
@@ -107,7 +110,28 @@ Body contains task detail sections keyed by task ID as headings:
 Implementation notes...
 ```
 
+## Debrief Schema
+
+Debriefs live at `Plans/<PlanName>/notes/<NN>-Phase-Name.md` and add three fields to the common set:
+
+```yaml
+---
+title: "Phase N Debrief: Phase Title"
+type: debrief
+status: complete        # draft while being written incrementally
+plan: PlanName          # the plan directory name
+phase: 1                # the phase number this debrief covers
+phase_title: "Phase Title"
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+tags: []
+related: []
+---
+```
+
 ## Dashboard Color Mapping
+
+Consumed by the companion `sdd-dashboard` plugin and by `/diagram`'s status styling (`classDef` colors):
 
 - `complete` / `approved` / `implemented` -> green
 - `in-progress` / `active` / `review` -> amber

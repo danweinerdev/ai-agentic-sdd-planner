@@ -6,13 +6,7 @@ description: "Capture learnings and reflections in a retrospective. Triggers: /r
 # /retro — Capture Learnings
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 After completing a significant piece of work (a plan, a sprint, a milestone) to capture what went well, what could be improved, and action items for the future.
@@ -28,7 +22,7 @@ After completing a significant piece of work (a plan, a sprint, a milestone) to 
      - What went well
      - What could be improved
      - Any key metrics or outcomes
-   - Review recent debriefs from `Plans/*/notes/` for context (filter by each plan's frontmatter `status` — typically `active` and `complete`) — and specifically look at each debrief's **Skill Opportunities** section to aggregate patterns that showed up across multiple phases
+   - Review recent debriefs from `Plans/*/notes/` for context (filter to plans whose frontmatter `status` is `active` or `complete`; include `archived` plans only if the retro period explicitly covers them) — and specifically look at each debrief's **Skill Opportunities** section to aggregate patterns that showed up across multiple phases
 
 3. **Spot Skill Opportunities**
    A retro spans a larger window than a single debrief, so skill opportunities here are often richer — patterns that repeated across phases, across plans, or across team members. Look for:

@@ -4,8 +4,11 @@ type: debrief
 plan: "{{PLAN}}"
 phase: {{PHASE_NUM}}
 phase_title: "{{PHASE_TITLE}}"
-status: complete
+status: {{STATUS}} # draft while being written incrementally; complete when finalized
 created: {{DATE}}
+updated: {{DATE}}
+tags: []
+related: []
 ---
 
 # Phase {{PHASE_NUM}} Debrief: {{PHASE_TITLE}}
