@@ -1,10 +1,10 @@
 {
   "name": "sdd-planner",
-  "version": "1.8.0",
-  "description": "Spec-driven development planning \u2014 lifecycle skills and review agents for structured plans, specs, designs, research, and retrospectives",
+  "version": "1.8.1",
+  "description": "Spec-driven development planning: lifecycle skills and review agents for structured plans, specs, designs, research, and retrospectives",
   "author": {
     "name": "Daniel Weiner"
   },
-  "repository": "https://github.com/danweinerdev/claude-project-planner",
+  "repository": "https://github.com/danweinerdev/ai-agentic-sdd-planner",
   "license": "MIT"
 }
