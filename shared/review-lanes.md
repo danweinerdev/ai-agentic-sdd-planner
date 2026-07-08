@@ -6,7 +6,7 @@ This file is the single source of truth for the convention. `/code-review` reads
 
 ## The contract
 
-> The four built-in lanes are the floor and always run. Project lanes are **additive**: they can add findings and coverage, but they never remove, replace, or weaken a built-in lane's inputs or its dispatch, and (unless explicitly marked `required`) their failure never aborts the four. "Additive" is about *findings* — it does not mean *free*: extra lanes cost latency, tokens, and rate-limit headroom, so gate them with `appliesTo` and keep them read-only.
+> The four built-in lanes are the floor and always run. Project lanes are **additive**: they can add findings and coverage, but they never remove, replace, or weaken a built-in lane's inputs or its dispatch, and their failure never aborts the four (a `required` lane's failure blocks the *verdict*, not the run). "Additive" is about *findings* — it does not mean *free*: extra lanes cost latency, tokens, and rate-limit headroom, so gate them with `appliesTo` and keep them read-only.
 
 Two consequences the rest of this file makes good on:
 - A project lane that fails is **reported, not hidden** — and if it was *declared and didn't run*, that visibly degrades the verdict headline so a green check can never sit over an un-run lane.
@@ -25,6 +25,8 @@ Discovered lanes are **agent instructions that live in the target repo**, execut
 
 1. The **target repo's** top-level `.claude/agents/*-reviewer.md` (the repo whose code is under review — where domain/language reviewers naturally live).
 2. The **user's** `~/.claude/agents/*-reviewer.md` (always registered for dispatch; useful for personal cross-project reviewers).
+
+**De-duplication precedence:** if the same bare `name` appears in **both** locations, the **target repo's** file wins and the user-level file is reported as *shadowed* (a quiet note, not Malformed). Two files in the **same** location resolving to the same bare `name` are **Malformed** — ambiguous dispatch; neither is dispatched until the names are fixed.
 
 It is **not** recursive: per-package `.claude/agents/` directories in a monorepo are out of scope. From each match it reads **only the socket fields** it mechanically needs — `reviewLane`, `lane`, `appliesTo`, `required` — and keeps every file whose `reviewLane` is boolean `true`.
 
@@ -47,9 +49,9 @@ A project reviewer is an ordinary Claude Code agent file. The socket adds four f
 
 `appliesTo` and `lane` are **independent axes** — one gates dispatch, the other governs inputs and grouping. They do not interact.
 
-**`reviewLane` truthiness is strict.** Only the YAML boolean `true` enables a lane. A present-but-non-boolean value (`"true"`, `1`, `on`) is a likely authoring mistake: it is reported as **Malformed**, never silently dropped. (Note YAML 1.1 parses bare `yes`/`on` as boolean true — acceptable, but `true` is the documented form.)
+**`reviewLane` truthiness is strict.** Only a value that **parses to YAML boolean true** enables a lane; `true` is the documented form — write that. (Whether bare `yes`/`on` parse to boolean depends on the YAML version — 1.1 says yes, 1.2 says no — so don't rely on them.) A present value that parses to anything else (`"true"`, `1`, an arbitrary string) is a likely authoring mistake: it is reported as **Malformed**, never silently dropped.
 
-**A project lane's bare `name` must not equal a built-in's** (`drift-detector`, `quality-scanner`, `spec-compliance`, `blind-spot-finder`). A collision is reported as Malformed and the lane is not dispatched — otherwise it could shadow a built-in's identity and poison the synthesis sections that key on it. Two discovered files that resolve to the **same** bare `name` are likewise Malformed (ambiguous dispatch); fix the names.
+**A project lane's bare `name` must not equal a built-in's** (`drift-detector`, `quality-scanner`, `spec-compliance`, `blind-spot-finder`). A collision is reported as Malformed and the lane is not dispatched — otherwise it could shadow a built-in's identity and poison the synthesis sections that key on it. Two discovered files **in the same location** that resolve to the same bare `name` are likewise Malformed (ambiguous dispatch); a cross-location duplicate is resolved by precedence instead — see Discovery above.
 
 ### `appliesTo` — whether/when the lane runs
 
@@ -102,7 +104,7 @@ This lets a project ship, say, `security-sql-reviewer.md` and `security-api-revi
 By default a project lane is best-effort: if it doesn't run, the review proceeds and the verdict is *degraded* but not blocked. A project that depends on a lane (a security or migration gate) can set `required: true`. Then:
 
 - The four built-ins **still run and still synthesize** — a required lane's failure never aborts or fails the four. (This preserves the rule that an external lane's failure is not a failure of the core four.)
-- But if a `required` lane is discovered and does **not** successfully run (failed to dispatch, errored, timed out, or malformed), the overall **verdict is forced to BLOCKED** with a loud banner naming the lane. A green check can never appear over an un-run required gate.
+- But if a `required` lane is discovered and does **not** successfully run (failed to dispatch, errored, or was malformed), the overall **verdict is forced to BLOCKED** with a loud banner naming the lane. A green check can never appear over an un-run required gate.
 - A required lane that is legitimately **Skipped** (its `appliesTo` matched no changed path) does *not* block — it had nothing to review.
 
 ## Read-only requirement
@@ -125,13 +127,13 @@ There are two, and they behave differently on purpose.
 | **Skipped** | `appliesTo` matched no changed path (or was `[]`) | Quiet note + the paths it was tested against (working as intended, not a warning) |
 | **Failed to dispatch** | `Task` could not resolve the lane's bare `name` | Warning naming the discovered file and its declared `name`, stating the dispatch failed and that the cause is *either* a name/file mismatch *or* this repo's agents not being registered in this session. **Do not assert which.** |
 | **Errored** | Dispatched but the agent threw | Warning, with the error |
-| **Oversized** | Returned an unreasonably large report | Truncated with a note; the truncated head is still synthesized |
+| **Oversized** | Returned an unreasonably large report (rule of thumb: more than ~2,000 lines) | Truncated to the leading findings with a note; the truncated head is still synthesized. The lane counts as **run** and does not degrade the verdict. If truncation leaves no parseable findings, reclassify as **Errored** (which does). |
 | **Malformed** | `reviewLane` present but not boolean `true`; `lane` of an invalid type; bare `name` collides with a built-in or another lane | Warning at discovery; lane not dispatched |
 
 **Lane responsiveness is the project's responsibility.** The orchestrator dispatches lanes and waits for what returns — it does not impose a timeout. A lane that hangs or makes slow external calls will hold up the review; keeping a lane fast, read-only, and well-behaved is on the project, not the plugin. The socket just triggers them. (Always-on self-gathering lanes that make slow external calls are the usual cause of a sluggish review — another reason to prefer `appliesTo` gating.)
 
 **Verdict degradation (so failure is never silent).** The Overall Verdict and critical-issue counts are computed from the four built-ins plus any *successfully returned* project lanes. On top of that headline:
-- If any **declared** project lane did not successfully run (Failed to dispatch / Errored / Malformed — *not* Skipped), the verdict carries a mandatory **`(DEGRADED — N declared lane(s) did not run: <names>)`** suffix.
+- If any **declared** project lane did not successfully run (Failed to dispatch / Errored / Malformed — *not* Skipped, and *not* Oversized: a truncated lane still ran), the verdict carries a mandatory **`(DEGRADED — N declared lane(s) did not run: <names>)`** suffix.
 - If a **`required`** lane did not run, the verdict is forced to **`BLOCKED — required lane <name> did not run`**, overriding any otherwise-passing headline.
 - A purely **Skipped** lane does not degrade anything — it had no matching changes.
 

@@ -24,19 +24,13 @@ This skill's entire value comes from dispatching four intent-isolated sub-agents
 **External review lanes (best-effort, additive).** Beyond the four, a project can plug in its own specialized lanes via the socket defined in `shared/review-lanes.md` (e.g. a read-only `.claude/agents/sql-reviewer.md` carrying `reviewLane: true`). These are **additive, read-only, and never abort the four**:
 - The four built-ins are the floor and always run. A project lane only ever *adds* findings — never removes, replaces, or weakens a built-in lane's inputs or dispatch.
 - A project lane that fails to dispatch, errors, or is malformed is **recorded and dropped** — never aborts the four. The strict "STOP on dispatch failure" rule in this contract applies to the **four built-ins only**. Synthesis proceeds over the four plus whatever project lanes returned. (Lane *responsiveness* is the project's responsibility — the socket dispatches and waits; it imposes no timeout, so a lane that hangs will hold up the review.)
-- Failure is **not silent**: a declared lane that didn't run **degrades the verdict headline**, and an opt-in `required: true` lane that didn't run **forces the verdict to BLOCKED** (it gates the verdict, not the floor). The verdict is computed from the four plus any *successful* project lanes.
+- Failure is **not silent**: a declared lane that didn't run **degrades the verdict** (the Output Format's `Lane status` line — Alignment itself always reflects the returned lanes' findings), and an opt-in `required: true` lane that didn't run **forces Lane status to BLOCKED** (it gates the verdict, not the floor). The verdict is computed from the four plus any *successful* project lanes.
 - Lanes execute repo-supplied instructions with session tool access, so `/code-review` **confirms discovered lanes** with the user before dispatch when the target repo isn't the session's own project.
 
 If you find yourself reading a spec file or running `git diff` against the full patch in the primary context, stop. That work belongs in the sub-agents, not here. (Listing changed file *paths* with `--name-only` for `appliesTo` matching is allowed — that's paths, not content.)
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 During or after implementation of a plan phase, when you want to verify that the actual code matches what was planned. This skill dispatches four intent-isolated sub-reviewers against the diff and synthesizes their reports into a single review.
@@ -74,25 +68,35 @@ Your goal in this step is to produce four strings: plan path, phase doc path, ta
   - Plan path (e.g., `Plans/<PlanName>/README.md`)
   - Phase doc path (e.g., `Plans/<PlanName>/<NN>-<Phase-Name>.md`)
 - **Target repo path**: read `planning-config.json` for `planMapping` to find the repo key for this plan, then read `planning-config.local.json` for `repositories.<key>.path` to get the absolute local path. If that doesn't resolve, ask the user where the code lives.
-- **Diff scope**: if the user specified a branch, commit range, or "working + staged", record that verbatim. Otherwise, record "determine from phase created date" — the sub-agents can resolve it.
+- **Diff scope**: if the user specified a branch, commit range, or "working + staged", record that verbatim. Otherwise, record "determine from phase created date" — **you** will resolve it in Step 2c before dispatch; the sub-agents receive an already-resolved diff command.
 
 ### 2. Gather Only What Dispatch Needs
 
 To dispatch the sub-agents with the right inputs, you need a little bit of information from the planning artifacts and the target repo. Keep this step as narrow as possible — read frontmatter, not bodies.
 
-**a. Plan README frontmatter only.** Use `Read` on the plan README, but stop after the frontmatter. Extract the `related` field to get the list of spec paths (under `Specs/`) and design paths (under `Designs/`). **Do not** read the body of the README — the sub-agents will do that.
+**a. Plan README frontmatter only.** Use `Read` on the plan README, but stop after the frontmatter. Extract the `related` field to get the list of spec paths (under `Specs/`) and design paths (under `Designs/`); `related` entries in directory form get `/README.md` appended so the lanes receive file paths. **Do not** read the body of the README — the sub-agents will do that.
 
 **b. Prior debrief paths.** Use `Glob` on `Plans/<PlanName>/notes/*.md` to get the list of prior debrief paths. Do not read their contents — `drift-detector` will do that.
 
-**c. Resolve the diff scope.** First, detect the target repo's VCS using `shared/vcs-detection.md`. Then orient using the VCS-appropriate "working-tree status" and "recent history" commands from that file (e.g., `git status` + `git log --oneline -20` for git, `p4 opened` + `p4 changes -m 20` for perforce). If the user gave an explicit range, use it. If the user said "determine from phase created date", read only the frontmatter of the phase doc to get the `created` date, then find the earliest commit/changelist on or after that date. If you still can't resolve (or the VCS is `none`, in which case there is no history), ask the user for a base. Capture the scope as a concrete diff command (`git diff <base>..<head>` for git, `p4 diff2 -dw //path/...@<base> //path/...@<head>` for perforce) plus any unsubmitted/working coverage the user requested. **Do not** run the diff and read the patch content — the sub-agents will. Pass the detected VCS and the resolved diff command to each sub-agent so they don't have to re-detect.
+**c. Resolve the diff scope.** First, detect the target repo's VCS using `shared/vcs-detection.md`. Then orient using the VCS-appropriate "working-tree status" and "recent history" commands from that file (e.g., `git status` + `git log --oneline -20` for git, `p4 opened` + `p4 changes -m 20` for perforce). If the user gave an explicit range, use it. If the user said "determine from phase created date", resolve a base:
+   - **git, work on a feature branch**: prefer `git merge-base <default-branch> HEAD` as the base — it is exact and timezone-proof.
+   - **git, otherwise**: read only the frontmatter of the phase doc to get the `created` date, find the first commit on or after it (`git log --since=<created> --reverse --format=%H | head -1`), and use that commit's **parent** (`<sha>^`) as the base so the first commit's own changes are included. If it is the root commit, use the empty-tree hash.
+   - **perforce**: use the changelist immediately **before** the first changelist on or after the date.
+
+   If you still can't resolve (or the VCS is `none`, in which case there is no history), ask the user for a base. Capture the scope as a concrete diff command (`git diff <base>..<head>` for git, `p4 diff2 -dw //path/...@<base> //path/...@<head>` for perforce) plus any unsubmitted/working coverage the user requested. If working/staged changes are in scope, note in every dispatch that the tree is not frozen — and where the review matters, recommend the user commit first. **Do not** run the diff and read the patch content — the sub-agents will. Pass the detected VCS and the resolved diff command to each sub-agent so they don't have to re-detect.
 
 **d. Language-verification note (optional).** If `shared/language-verification.md` exists and the project language warrants structural checks, pass a one-line note to `drift-detector` and `quality-scanner` so they can flag missing sanitizers/static-analysis/type-checking work. You do not need to read the full language-verification doc — just detect the project language from a quick file-extension glance at the target repo and include it as context.
 
-**e. Discover project review lanes (optional socket).** Read `shared/review-lanes.md` first — it is the full convention; this is its operational summary. Glob, **non-recursively**, the **target repo's** top-level `.claude/agents/*-reviewer.md` and the user's `~/.claude/agents/*-reviewer.md`, de-duplicating by bare `name`. From each match read **only the socket fields** — `reviewLane`, `lane`, `appliesTo`, `required` — and **not** the `description` or body. (Reading intent-laden frontmatter pre-dispatch would violate the contents-blindness rule above; the `description` is not needed to dispatch.) Keep those whose `reviewLane` is boolean `true` (the filename is only a hint — the marker is the opt-in, and it is what keeps a project's `plan-reviewer`/`spec-reviewer` *overrides* from being mistaken for lanes). For each kept reviewer:
-   - **Validate** — drop as **Malformed** (report later, do not dispatch): `reviewLane` present but not boolean `true`; `lane` of an invalid type; a bare `name` equal to a built-in (`drift-detector`/`quality-scanner`/`spec-compliance`/`blind-spot-finder`); or two discovered files resolving to the same bare `name`.
+**e. Discover project review lanes (optional socket).** Glob, **non-recursively**, the **target repo's** top-level `.claude/agents/*-reviewer.md` and the user's `~/.claude/agents/*-reviewer.md`. If the glob matches nothing, this step is a no-op — skip straight to Step 3. If it matches anything, read `shared/review-lanes.md` — it is the full convention; this is its operational summary. From each match read **only the socket fields** — `reviewLane`, `lane`, `appliesTo`, `required` — and **not** the `description` or body. (Reading intent-laden frontmatter pre-dispatch would violate the contents-blindness rule above; the `description` is not needed to dispatch.) Then classify every file that declares a `reviewLane` key at all (the filename is only a discovery hint — the marker is the opt-in, and it is what keeps a project's `plan-reviewer`/`spec-reviewer` *overrides*, which carry no `reviewLane`, from being mistaken for lanes):
+   - `reviewLane` parses to boolean `true` → **candidate lane**, continue below.
+   - `reviewLane` present with any other value → **Malformed** (report in Step 5; do not dispatch). Never silently drop it.
+   - **De-duplicate by bare `name`**: the same `name` in both locations → the target repo's file wins, the user-level file is noted as *shadowed*; the same `name` twice in one location → both **Malformed** (ambiguous dispatch). A `name` equal to a built-in (`drift-detector`/`quality-scanner`/`spec-compliance`/`blind-spot-finder`) → **Malformed**.
+   - `lane` of an invalid type (non-string) → **Malformed**.
+
+   For each surviving candidate:
    - **Dispatch gate.** If it declares `appliesTo` (a list of minimatch/globstar globs, repo-root-relative, case-sensitive), get the changed file *paths* via the VCS-appropriate name-only listing run with **cwd = target repo** (`git -C <target> diff --name-only <base>..<head>`, or `p4` + `p4 where` for depth→relative paths — see `shared/review-lanes.md`). Paths only, never hunk content. Keep the lane only if some glob matches; otherwise mark it **Skipped** and remember the tested paths. `appliesTo: []` always Skips; absent `appliesTo` always dispatches and self-scopes.
    - **Input bundle.** Match `lane` exact-lowercase. Recognized values (`code`/`spec`/`plan`/`diff-only`) get the **same** curated bundle as the matching built-in. An absent or unrecognized `lane` gets base inputs only (target repo path, VCS label, diff command) and self-gathers the rest. Group reviewers sharing the same unrecognized `lane`. Record any `required: true`.
-   - **Trust gate.** If the target repo is **not** the session's own project, these are externally-supplied instructions executing with session tool access — **list the discovered lanes and ask the user to confirm** before dispatching. Even when it is the session project, name the discovered lanes to the user.
+   - **Trust gate.** The target repo counts as the session's own project iff its resolved absolute path equals (or contains) the session working directory's repo root. If it is **not**, these are externally-supplied instructions executing with session tool access — **list the discovered lanes and ask the user to confirm** before dispatching. Even when it is the session project, name the discovered lanes to the user.
 
    If there are no project reviewers, this step is a no-op and the review runs the four built-ins exactly as before.
 
@@ -189,16 +193,45 @@ Disagreements get their own section in the output. Never quietly reconcile them 
 - **Identity by dispatch, not by string.** Key the "Blind Spots Only `blind-spot-finder` Caught" section and the per-lane sections on the **dispatched identity** (the namespaced built-in, or the project lane's resolved name), never a bare matched string. A project lane cannot be mistaken for a built-in — a name collision was already rejected as Malformed in Step 2e.
 - **Recognized lanes stay in their bundle.** If a recognized-lane reviewer (`code`/`spec`/`plan`/`diff-only`) asserts a finding about an artifact it was not granted (e.g. a `spec` lane claiming "the plan requires X"), demote that claim to a **Question** — it spoke outside its inputs.
 
-**h. Compute the verdict, then degrade it visibly.** The Overall Verdict and counts come from the four built-ins plus any *successfully returned* project lanes — a lane that failed to run is a coverage gap, not a finding, and never drags the verdict down on its own. But the gap must not be silent:
-- If any **declared** project lane did not run (Failed to dispatch / Errored / Oversized-to-unusable / Malformed — **not** Skipped), append `(DEGRADED — N declared lane(s) did not run: <names>)` to the verdict line.
-- If a **`required`** lane did not run, force the verdict to `BLOCKED — required lane <name> did not run`, overriding an otherwise-passing headline. The four still ran and their findings still stand; BLOCKED reflects that a gate the project declared mandatory was not satisfied.
-- A purely **Skipped** lane (no matching changed paths) degrades nothing — it had nothing to review.
+**h. Compute the verdict, then degrade it visibly.** The Overall Verdict and counts come from the four built-ins plus any *successfully returned* project lanes — a lane that failed to run is a coverage gap, not a finding, and never drags the verdict down on its own.
+
+Compute **Alignment** by worst-of mapping across the returned lanes' own verdicts: any lane at its worst tier (drift `Weak`, quality `Concerning`, compliance `Weak`, hidden-risk `High`, or any Critical finding) → **Weak**; otherwise any lane at its middle tier (`Moderate` / `Acceptable` / `Partial` / `Elevated`) → **Moderate**; otherwise **Strong**.
+
+Lane failures never rewrite Alignment — they are carried on the separate **Lane status** line of the Output Format:
+- If any **declared** project lane did not run (Failed to dispatch / Errored / Malformed — **not** Skipped, and **not** Oversized: a truncated lane still ran; only if truncation leaves no parseable findings does it reclassify as Errored), set Lane status to `DEGRADED — N declared lane(s) did not run: <names>`.
+- If a **`required`** lane did not run, set Lane status to `BLOCKED — required lane <name> did not run`, overriding DEGRADED. The four still ran and their findings still stand; BLOCKED reflects that a gate the project declared mandatory was not satisfied.
+- A purely **Skipped** lane (no matching changed paths) degrades nothing — it had nothing to review. Otherwise Lane status is `OK`.
 
 **Do NOT introduce new findings of your own during synthesis.** Your job is to synthesize what the four sub-agents returned, not to add findings based on your own reading. If you notice something none of the four agents caught, it means one of the agents needs to be improved — note it in an "Orchestrator Observations" addendum rather than silently inserting it as a finding.
 
 ### 5. Present the Unified Review to the User
 
-Render the synthesis in the output format below. Include the raw sub-reports verbatim in `<details>` blocks so the user can drill in. Do not re-summarize the sub-reports — the synthesis is the summary, the raw reports are the evidence.
+Render the synthesis in the output format below. Include the raw sub-reports verbatim in `<details>` blocks so the user can drill in (for an Oversized lane, the block contains the truncated text plus the truncation note). Do not re-summarize the sub-reports — the synthesis is the summary, the raw reports are the evidence.
+
+### 6. Offer Next Steps
+Based on findings, suggest appropriate actions:
+
+**If alignment is strong:**
+- Proceed to `/debrief` to capture the phase outcome
+- Note any minor items for the debrief
+
+**If drift is detected:**
+- Fix the code to match the plan, OR
+- Update the plan to reflect intentional changes (scope was wrong)
+- Document the deviation rationale
+
+**If planning blind spots are found:**
+- Update specs/designs to account for discovered complexity
+- Add tasks to the current or a future phase
+- Create a research document for unknowns that need investigation
+
+**If open questions remain:**
+- Present the Open Questions section for the user to verify
+- Flag any that could cause issues if wrong
+
+Never use "pre-existing" to justify deferring or hiding a finding. "Pre-existing" describes origin, not impact. Present findings by what they do to the user, not when they were introduced. The user decides what is worth fixing.
+
+Never downscope a finding, recommendation, or fix by estimating how long it would take a human. Agents are not constrained by human development timelines. The right fix is right; surface it. Prefer a smaller change only when it is genuinely better on its own merits — clearer, lower risk, smaller surface area — never because a larger one would "take too long." The user decides what is worth fixing; don't pre-decide for them on time grounds.
 
 ## Output Format
 
@@ -305,31 +338,6 @@ Findings raised as unverified suspicions by one or more reviewers that couldn't 
 [paste each project lane's full report — one block per lane that returned. Omit if there were none.]
 </details>
 ```
-
-### 6. Offer Next Steps
-Based on findings, suggest appropriate actions:
-
-**If alignment is strong:**
-- Proceed to `/debrief` to capture the phase outcome
-- Note any minor items for the debrief
-
-**If drift is detected:**
-- Fix the code to match the plan, OR
-- Update the plan to reflect intentional changes (scope was wrong)
-- Document the deviation rationale
-
-**If planning blind spots are found:**
-- Update specs/designs to account for discovered complexity
-- Add tasks to the current or a future phase
-- Create a research document for unknowns that need investigation
-
-**If assumptions need checking:**
-- Present the assumption checklist for the user to verify
-- Flag any that could cause issues if wrong
-
-Never use "pre-existing" to justify deferring or hiding a finding. "Pre-existing" describes origin, not impact. Present findings by what they do to the user, not when they were introduced. The user decides what is worth fixing.
-
-Never downscope a finding, recommendation, or fix by estimating how long it would take a human. Agents are not constrained by human development timelines. The right fix is right; surface it. Prefer a smaller change only when it is genuinely better on its own merits — clearer, lower risk, smaller surface area — never because a larger one would "take too long." The user decides what is worth fixing; don't pre-decide for them on time grounds.
 
 ## Output
 No new artifact is created. This skill produces an inline review presented to the user. If the user wants to record findings:
