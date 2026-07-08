@@ -21,6 +21,7 @@ When you need to define the requirements for a feature before designing or imple
 2. **Draft Specification**
    - Create `Specs/<FeatureName>/README.md` using `shared/templates/spec.md`
    - Write: overview, goals, non-goals, requirements (functional + non-functional), user stories, acceptance criteria, constraints, dependencies
+   - When the spec captures an **external contract** (a third-party API, protocol, wire format, or another team's interface), pin the source: link the authoritative doc and record its version and as-of date in the spec. Downstream implementation is only allowed to derive external-contract behavior from this captured source — never from model memory — so the pin is load-bearing.
    - Set status to `draft`
 
 3. **Review**
@@ -30,6 +31,7 @@ When you need to define the requirements for a feature before designing or imple
 
 4. **Present for Approval**
    - Show the user the review results and final spec
+   - **Open questions gate approval.** Before setting `status: approved`, every remaining open question must be either resolved or explicitly marked **non-blocking** with a one-line rationale for why the requirements hold regardless of its answer. A question whose answer could change in-scope requirements blocks approval — leave the spec at `review` and name the question to the user. A "⚠️ pending confirmation" annotation is not a gate.
    - After findings are addressed and the user explicitly approves, set `status: approved`. If the user declines or defers, leave it at `review`.
    - Then re-read the frontmatter and confirm it parses as YAML and includes `title`, `type`, `status`, `created`, `updated`, `tags`, `related`.
 

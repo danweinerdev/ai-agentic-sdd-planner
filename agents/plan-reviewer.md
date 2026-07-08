@@ -32,7 +32,7 @@ You are invoked with the path to the document under review (a plan README plus i
 
 ## Review Lenses
 
-Evaluate the document against these four lenses:
+Evaluate the document against these five lenses:
 
 ### 1. Completeness
 - Are all necessary phases/tasks included?
@@ -58,6 +58,11 @@ Evaluate the document against these four lenses:
 - Are testing and validation included?
 - Are rollback or recovery plans needed?
 
+### 5. Provisional Scope (Gated Work)
+Hunt for work that depends on an unanswered external question — anything hedged with "assuming X", "pending confirmation", "TBD with vendor/stakeholder", or an acceptance criterion that can't be evaluated until someone answers something. A pending-confirmation flag is not a gate: a model will implement straight past it. Any in-scope task/requirement gated on an open external question is a **Critical** finding and forces a **Revise** verdict — the fix is to resolve the question, cut the work from scope, or (for plans) mark the affected phase `blocked` naming the question.
+
+Also check task `verification` fields: where the check is commandable, verification should name the exact command and expected observable output; flag prose-only verification on commandable work as Major.
+
 ## Output Format
 
 ```markdown
@@ -69,7 +74,7 @@ One-paragraph overall assessment.
 ### Findings
 
 #### [Severity: Critical | Major | Minor | Question]
-**Lens:** [Completeness | Feasibility | Convention | Gap]
+**Lens:** [Completeness | Feasibility | Convention | Gap | Provisional Scope]
 **Location:** [file path or section]
 **Issue:** Description of the issue
 **Recommendation:** How to fix it

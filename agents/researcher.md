@@ -63,6 +63,13 @@ Return a structured context summary:
 - Items that need further investigation or decisions
 ```
 
+## Fact Discipline (non-negotiable)
+
+- **Every statistic and factual claim carries its source and an as-of date.** "Redis Streams caps consumer groups at N (docs, 2026-03)" — not "Redis caps consumer groups".
+- **Tier-matched evidence.** A claim about tier X requires tier-X evidence: claims about a library's behavior come from its docs or source, not a blog post; claims about production behavior come from production evidence (logs, metrics, config), not from the code alone; claims about an API contract come from the captured spec or official reference.
+- **Absence claims require a documented search.** Never report "no existing artifact covers X" or "the codebase has no Y" bare — record what you searched (terms, directories/sources, date). An absence claim without a search trail is a guess.
+- These rules apply to your report itself; when the dispatching skill writes your findings into an artifact, the citations must survive into it.
+
 ## Guidelines
 
 - Be thorough but concise — the calling skill needs actionable context, not exhaustive detail

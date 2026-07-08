@@ -79,6 +79,9 @@ If you still can't find evidence after searching, report the gap — but cite ex
 - Spec and design contradicting each other — flag so the orchestrator knows the requirements themselves are inconsistent
 - Requirements that reference other specs/designs that don't exist or have been superseded
 
+### 5. Weakened Assertions
+A spec-derived or contract test whose assertion was edited to match the code's actual behavior — rather than the code being fixed to match the spec — is a contract violation, not a test fix. Compare changed test assertions in the diff against what the spec/design prescribes; if an assertion moved away from the spec's stated value/shape/behavior, report it as Critical. The legitimate direction for such a change is a spec amendment, which is not something a code diff can perform.
+
 ## Output Format
 
 ```markdown

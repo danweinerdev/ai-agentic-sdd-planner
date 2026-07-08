@@ -32,6 +32,7 @@ When you need to define the technical architecture for a component or system bef
 
 4. **Present for Approval**
    - Show the user the review results and final design
+   - **Open questions gate approval.** Before setting `status: approved`, every remaining open question must be either resolved or explicitly marked **non-blocking** with a one-line rationale for why the design holds regardless of its answer. A question whose answer could change the architecture blocks approval — leave the design at `review` and name the question to the user. A "⚠️ pending confirmation" annotation is not a gate.
    - After findings are addressed and the user explicitly approves, set `status: approved`. If the user declines or defers, leave it at `review`.
    - Then re-read the frontmatter and confirm it parses as YAML and includes `title`, `type`, `status`, `created`, `updated`, `tags`, `related`.
 

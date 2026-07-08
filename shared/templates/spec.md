@@ -20,6 +20,7 @@ Brief description of the feature and its purpose.
 -
 
 ## Requirements
+<!-- External contracts (third-party APIs, protocols, wire formats, other teams' interfaces): pin the source — link the authoritative doc and record its version and as-of date. -->
 
 ### Functional Requirements
 1.

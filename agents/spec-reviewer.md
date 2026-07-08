@@ -52,6 +52,9 @@ You are invoked with the path to the document under review (a plan README plus i
 - Are non-goals explicitly stated?
 - Is there scope creep (requirements that belong elsewhere)?
 
+### 5. Provisional Scope (Gated Work)
+Hunt for work that depends on an unanswered external question — anything hedged with "assuming X", "pending confirmation", "TBD with vendor/stakeholder", or an acceptance criterion that can't be evaluated until someone answers something. A pending-confirmation flag is not a gate: a model will implement straight past it. Any in-scope task/requirement gated on an open external question is a **Critical** finding and forces a **Revise** verdict — the fix is to resolve the question, cut the work from scope, or (for plans) mark the affected phase `blocked` naming the question.
+
 ## Output Format
 
 ```markdown
@@ -63,7 +66,7 @@ One-paragraph overall assessment.
 ### Findings
 
 #### [Severity: Critical | Major | Minor | Question]
-**Lens:** [Testability | Completeness | Ambiguity | Scope]
+**Lens:** [Testability | Completeness | Ambiguity | Scope | Provisional Scope]
 **Section:** [which section of the spec]
 **Issue:** Description
 **Recommendation:** How to fix

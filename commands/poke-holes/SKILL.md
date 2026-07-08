@@ -35,6 +35,11 @@ Think of it as the planning-artifact counterpart to `sdd-planner:blind-spot-find
    - Which claims are asserted without evidence? What happens if each one turns out to be false?
    - What load-bearing assumption is so obvious the author didn't even write it down?
 
+   **The Unsourced Claims Lens**
+   - Any statistic or factual claim in the artifact without a source and as-of date is a finding (severity Minor, or Major if a decision rests on it).
+   - Any absence claim ("no library does X", "nothing depends on Y") without a documented search trail is a finding.
+   - Any external-contract detail that doesn't trace to a pinned source is a finding.
+
    **The Missing Scenarios Lens**
    - What concrete error cases aren't handled? (Name them: "what if the DB is unreachable at step 2?")
    - What edge cases are dismissed or ignored?
