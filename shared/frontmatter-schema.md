@@ -95,7 +95,7 @@ tasks:
 | `title` | yes | Human-readable task title |
 | `status` | yes | Task status (see status values above) |
 | `depends_on` | no | List of task IDs this task depends on |
-| `verification` | yes | How we know the work is good and complete — name each new or changed behavior to cover, not test counts |
+| `verification` | yes | How we know the work is good and complete — name each new or changed behavior to cover, not test counts. Where the check is commandable, include the exact command and expected observable output (e.g., `cargo test auth:: — 14 pass incl. the new refresh-expiry case`); prose-only criteria are for behavior no command can observe |
 
 Body contains task detail sections keyed by task ID as headings:
 

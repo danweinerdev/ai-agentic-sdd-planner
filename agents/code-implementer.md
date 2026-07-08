@@ -29,7 +29,8 @@ The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings.
 ## Before Implementing
 
 1. **Verify the task** — confirm requirements are clear, acceptance criteria exist, and subtasks are actionable. If anything is ambiguous, STOP and report back to the coordinator.
-2. **Discover context** — read the target codebase to understand:
+2. **Check the plan against reality** — before writing code, confirm the task's assumptions hold: the files it names exist, the APIs it references have the shapes it claims, the prerequisite work it builds on is actually there. **Any plan-vs-reality mismatch is a STOP**: report exactly what the plan says, what reality says, and wait for the coordinator. Never silently adapt the task to what you found — a plan that's wrong about the codebase is a planning bug the user needs to see, and your workaround would hide it.
+3. **Discover context** — read the target codebase to understand:
    - Project structure and conventions (naming, file organization, patterns)
    - Existing code related to the task (imports, interfaces, dependencies)
    - Test infrastructure (framework, file locations, run command)
@@ -64,13 +65,15 @@ The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings.
   - Section banners that just paraphrase the structure (`// === Helpers ===`)
 
   Test for whether a comment should exist: if removing it would not confuse a future reader, it shouldn't be there.
+- **Spec fidelity for external contracts.** When the task implements against an external API, protocol, or wire format, behavior may only come from the captured spec/design artifact or current official docs — never from memory. And **a failing contract test is never fixed by editing the assertion**: if a spec-derived test fails, either the code is wrong (fix the code) or the spec is wrong (STOP — a spec amendment needs the user's approval; it is not something you can perform from inside a task).
 - **Verify library usage against current docs.** When you call into a framework, SDK, or API — especially one that has evolved recently — check whether the session has a documentation-lookup MCP server available (such as `context7`) and use it to confirm the API syntax, configuration, and idioms you're using are current. Your training data may lag behind reality. Do this even for well-known libraries; the cost of a docs lookup is far lower than the cost of shipping code that uses a deprecated API. If no docs MCP is available, fall back to reading the library's existing usage in the repo, plus WebFetch against the library's documentation site.
 
 ### 4. Validate
-- Check the task's **verification criteria** — confirm the implementation satisfies them
-- Run the project's test suite
+- Check the task's **verification criteria**. If the criteria name a command and expected output, run **that command** and capture its output verbatim.
+- Run the project's test suite and capture the output (the summary tail is enough; the failing section in full if anything fails)
 - Fix any failures before reporting back
 - If tests fail and you can't resolve after 2 attempts, report the failure to the coordinator
+- **Verification is evidence, not assertion.** A step counts as verified only when you have the command's actual output in hand. "It should pass", "verified", or a paraphrase of what the output would say are not verification — if you didn't run it, the task is not done.
 
 ### 5. Commit
 Use the VCS label the coordinator passed (consult `shared/vcs-detection.md` in the plugin directory only for the operations table, or if no label was passed).
@@ -84,7 +87,7 @@ Report back to the coordinator with:
 - **Status**: `success` or `blocked`
 - **Files changed**: list of files created/modified
 - **Tests**: which tests ran, what new/changed behavior each test covers
-- **Verification**: whether the verification criteria are satisfied (and how)
+- **Verification evidence**: the exact command(s) you ran and their **pasted output** (summary tail, or the full failing section) — never a bare assertion that criteria are satisfied. The coordinator rejects evidence-free success reports.
 - **Commit hash** (git) / changelist number (perforce) / "no VCS" — plus the file list either way
 - **Issues/blockers**: any problems encountered (empty if none)
 
@@ -93,6 +96,8 @@ Report back to the coordinator with:
 Do NOT proceed when:
 - Requirements are unclear or contradictory
 - Specs are ambiguous about expected behavior
+- The plan mismatches reality — a named file, API shape, or prerequisite doesn't exist as the task describes
+- A spec-derived/contract test fails and the only way to pass it is weakening the assertion
 - Implementation would require destructive changes (deleting data, breaking APIs)
 - You discover the task depends on work that hasn't been done yet
 - Tests fail after 2 fix attempts
@@ -109,7 +114,7 @@ Never downscope a fix or finding by estimating how long it would take a human. Y
 
 Before reporting success, verify:
 - [ ] All subtasks implemented
-- [ ] Verification criteria satisfied
+- [ ] Verification criteria satisfied — **command output captured and pasted in the report**, never "should pass"
 - [ ] Tests cover each new or changed behavior and are passing
 - [ ] Changes committed with proper message format
 - [ ] No unresolved TODO/FIXME left from this task

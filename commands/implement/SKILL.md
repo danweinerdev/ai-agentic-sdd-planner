@@ -43,8 +43,8 @@ Before executing any tasks, audit every task in the phase for a `verification` f
 Also read `shared/language-verification.md` and detect the target project language. Verify that the phase includes the language-appropriate structural checks (sanitizers, static analysis, type checking) — either in individual task verification fields or as a dedicated verification task. If missing, flag this alongside any tasks missing verification criteria.
 
 Scan the phase's `tasks[]` array and separate tasks into two lists:
-- **Ready**: tasks that have a non-empty `verification` field with specific, observable criteria
-- **Missing verification**: tasks where `verification` is absent, empty, or vague (e.g., "works correctly", "done", "it works")
+- **Ready**: tasks that have a non-empty `verification` field with specific, observable criteria — ideally the exact command to run and its expected output (the standard `/plan` writes to)
+- **Missing verification**: tasks where `verification` is absent, empty, or vague (e.g., "works correctly", "done", "it works"). Also flag (as advisory, not blocking) commandable work whose verification is prose-only — the implementer then has to invent the check, which is where hasty verification creeps in.
 
 #### Forward-reference audit
 
@@ -117,13 +117,15 @@ Before launching each wave, check whether two or more tasks in the same wave mig
 **a. Launch implementer agents (parallel)**
 - Update each wave task's status to `in-progress` in the phase frontmatter **before** launching — if the session dies mid-wave, resume logic must not see `planned` tasks that actually ran
 - For each task in the wave, launch a `sdd-planner:code-implementer` agent via the Task tool (use the plugin-namespaced name — bare `code-implementer` will not resolve)
-- Each agent receives: task ID, title, subtasks, **verification criteria** (the task's `verification` field), plan name and phase name (for the commit message), spec/design paths from step 3, target codebase path, detected VCS label, any notes from prior task debriefs
+- Each agent receives: task ID, title, subtasks, **verification criteria** (the task's `verification` field), the task's `### Trap` note if the phase doc has one, plan name and phase name (for the commit message), spec/design paths from step 3, target codebase path, detected VCS label, any notes from prior task debriefs
 - Launch all tasks in the wave as concurrent Task tool calls
 
 **b. Collect results**
-- As each agent completes, collect: files changed, test results, the change reference (commit hash for git, changelist number for perforce, "no VCS" plus file list otherwise), issues
+- As each agent completes, collect: files changed, test results, verification evidence, the change reference (commit hash for git, changelist number for perforce, "no VCS" plus file list otherwise), issues
+- **Reject evidence-free success.** A success report must contain the verification command(s) actually run and their pasted output. If verification is asserted rather than shown ("tests should pass", "verified", a paraphrase of expected output), the task is **not done**: resume the agent to produce the evidence — this consumes its one retry.
 - If an agent reports failure/blockers → resume it **once** with clarified guidance; if it fails again, mark the task `blocked`, record the reason, and escalate per Escalation Rule 1
-- If an agent reports success → proceed to review
+- If an agent reports a **plan-vs-reality mismatch** (the plan names files, APIs, or prerequisites that don't match the codebase) → do not re-dispatch with a workaround; surface the mismatch to the user per Escalation Rule 2/3 — it's a planning bug, and patching around it in dispatch hides it
+- If an agent reports success with evidence → proceed to review
 
 **c. Review completed tasks**
 - For each successfully completed task, dispatch `sdd-planner:quality-scanner` via the Task tool (use the plugin-namespaced name — bare `quality-scanner` will not resolve)
