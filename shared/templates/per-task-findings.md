@@ -1,4 +1,4 @@
-## Task {{TASK_ID}} — Quality Findings (commit `{{COMMIT_HASH}}`)
+## Task {{TASK_ID}} — Quality Findings (change `{{CHANGE_REF}}`)
 
 | # | Severity | Lens | Location | Finding |
 |---|---|---|---|---|
@@ -18,7 +18,9 @@
 Placeholder reference:
 
 - TASK_ID            — e.g., "2.1"
-- COMMIT_HASH        — short SHA from the implementer's report
+- CHANGE_REF         — from the implementer's report: short commit SHA
+                       (git), changelist number (perforce), or "n/a"
+                       (no VCS)
 - FINDINGS_TABLE_ROWS
                      — one row per finding, lifted verbatim from the
                        quality-scanner output's table; preserve order.

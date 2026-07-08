@@ -6,13 +6,7 @@ description: "Execute a plan phase — implement tasks, track progress, update s
 # /implement — Execute Plan Phase
 
 ## Path Resolution
-**Artifacts** (Plans/, Research/, Specs/, etc.) are read from and written to the **planning root**.
-Read `planning-config.json` (at repo root) to find the planning root:
-- `planningRoot` of `"."` or absent → artifacts at repository root
-- `planningRoot` of `"<dir>"` → artifacts under `<dir>/` from repo root
-- `planningRoot` of `"/absolute/path"` → artifacts in an external directory
-
-**Templates and schema** (`shared/`) are read from the **plugin directory**, not from the planning root. The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings — find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`. If multiple matches are found (e.g., multiple cached plugin versions), sort by version number and use the highest. Strip `commands/research/SKILL.md` from the matched path to get the plugin directory.
+The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings. Find it by globbing for `**/commands/research/SKILL.md` in both the current directory and `~/.claude/plugins/cache/`; if multiple versions match, sort them as **semantic versions** (like `sort -V`) and use the highest, then strip `commands/research/SKILL.md` from the match. Resolve the planning root (artifacts) and target repository per `shared/path-resolution.md` in the plugin directory.
 
 ## When to Use
 When a plan is approved and you're ready to implement a phase. This skill **coordinates** implementation: it delegates actual code work to `code-implementer` agents, runs them in parallel where dependencies allow, triggers `quality-scanner` agents after each task for a fast intent-blind quality check, and manages the review-fix cycle. It bridges the gap between `/plan` (which defines *what* to build) and `/debrief` (which captures *what happened*).
@@ -34,16 +28,13 @@ Per-task reviews during `/implement` dispatch `quality-scanner` directly (not th
 - If phase status is `planned`, update it to `in-progress`
 
 ### 2. Locate Target Codebase
-- Read `planning-config.json` for the repository mapping
-- If `planMapping` has an entry for this plan, find the target repo
-- If `planning-config.local.json` exists, read it for local filesystem paths
-- Verify the target repo/directory exists and is accessible
+- Resolve the target repository via the chain in `shared/path-resolution.md` (`planMapping[<PlanName>]` → repo key → `planning-config.local.json` `repositories.<key>.path`). If any link is missing or the path doesn't exist, stop and ask the user for the target directory — never guess, never clone.
+- Detect the target repo's VCS per `shared/vcs-detection.md` (`git`, `git-worktree`, `perforce`, or `none`). You will pass this label to every implementer and scanner dispatch — they must not re-detect.
 
 ### 3. Load Context
-- Read related specs from `Specs/` (referenced in plan README `related` field)
-- Read related designs from `Designs/`
-- Review any previous phase debriefs in `Plans/<PlanName>/notes/` for context from prior phases
-- Build a mental model of what this phase needs to deliver
+- Extract spec and design **paths** from the plan README's `related` frontmatter — do not read their bodies in the primary context; the implementer agents read what they need (they have all tools). Pass the paths in each dispatch.
+- Skim any previous phase debriefs in `Plans/<PlanName>/notes/` for constraints and gotchas that affect task dispatch — these are short and orchestration-relevant, so a primary-context read is appropriate.
+- What you need in the primary context is just enough to scope and dispatch: the phase's deliverable, task list, dependencies, and any prior-phase warnings.
 
 ### 4. Verify Task Readiness
 
@@ -124,27 +115,27 @@ Before launching each wave, check whether two or more tasks in the same wave mig
 #### For Each Wave
 
 **a. Launch implementer agents (parallel)**
+- Update each wave task's status to `in-progress` in the phase frontmatter **before** launching — if the session dies mid-wave, resume logic must not see `planned` tasks that actually ran
 - For each task in the wave, launch a `sdd-planner:code-implementer` agent via the Task tool (use the plugin-namespaced name — bare `code-implementer` will not resolve)
-- Each agent receives: task ID, title, subtasks, relevant spec/design context, target codebase path, any notes from prior task debriefs
+- Each agent receives: task ID, title, subtasks, **verification criteria** (the task's `verification` field), plan name and phase name (for the commit message), spec/design paths from step 3, target codebase path, detected VCS label, any notes from prior task debriefs
 - Launch all tasks in the wave as concurrent Task tool calls
-- Update each task's status to `in-progress` in the phase frontmatter
 
 **b. Collect results**
-- As each agent completes, collect: files changed, test results, commit hash, issues
-- If an agent reports failure/blockers → mark task `blocked`, record the reason
+- As each agent completes, collect: files changed, test results, the change reference (commit hash for git, changelist number for perforce, "no VCS" plus file list otherwise), issues
+- If an agent reports failure/blockers → resume it **once** with clarified guidance; if it fails again, mark the task `blocked`, record the reason, and escalate per Escalation Rule 1
 - If an agent reports success → proceed to review
 
 **c. Review completed tasks**
 - For each successfully completed task, dispatch `sdd-planner:quality-scanner` via the Task tool (use the plugin-namespaced name — bare `quality-scanner` will not resolve)
 - Render the dispatch prompt from `shared/templates/quality-scan-prompt.md`. The template handles the boilerplate framing (intent-blind framing, scope, output table); your job per-dispatch is to fill in `FOCUS_LIST` — a 4–8 item curated list of risk areas in this specific diff. That is where the orchestrator's judgment lives.
-- Scope the review to that task's changes — pass the target repo path, the file list, and the commit range from the implementer's report via the template's placeholders
+- Scope the review to that task's changes — pass the target repo path, the file list, the VCS label from step 2, and the change reference from the implementer's report (the implementer makes exactly one commit/changelist per task) via the template's placeholders. For `none`-VCS targets, scope the scan by the implementer's file list instead of a change reference.
 - The scanner evaluates the code intent-blind: correctness, safety, maintainability, testing, over-engineering — including **comment quality** (flags WHAT-restating comments, PR-time context references, tombstones for deleted code, and any comment that doesn't earn its place by capturing non-obvious WHY)
 - Do **not** pass plan/spec/design context — `quality-scanner` is deliberately intent-blind, and the full orchestrated `/code-review` at end-of-phase covers the plan/spec/design perspective
 
 **d. Process review findings**
 - **Critical findings** → resume the `sdd-planner:code-implementer` agent to address the issue, then re-review
 - **Non-critical findings** (Major/Minor/Question) → collect and present to user after the wave completes
-- Maximum 2 review-fix cycles per task. If critical issues remain after 2 cycles, mark the task as `needs-attention` and move on.
+- Maximum 2 review-fix cycles per task. If critical issues remain after 2 cycles, mark the task `blocked` with the reason ("critical findings unresolved after 2 review-fix cycles"), finish the wave's other tasks, and escalate at end of wave per Escalation Rule 5.
 
 Never use "pre-existing" to justify deferring or hiding a finding. "Pre-existing" describes origin, not impact. Present findings by what they do to the user, not when they were introduced. The user decides what is worth fixing.
 
@@ -213,11 +204,11 @@ If a phase is already `in-progress` (from a previous session):
 
 These conditions require stopping and asking the user:
 
-1. **Blocked task**: An agent can't complete a task after 2 attempts. Present the issue and ask for guidance.
+1. **Blocked task**: An agent can't complete a task after 2 attempts (initial dispatch + one resume with clarified guidance). Present the issue and ask for guidance.
 2. **Spec ambiguity**: The spec or design doesn't cover a case encountered during implementation. Ask the user to clarify rather than guessing.
 3. **Scope expansion**: Implementation reveals work not captured in the plan. Flag it — don't silently expand scope.
 4. **Destructive action**: Any action that would delete data, modify production config, or affect shared systems needs explicit approval.
-5. **Unresolvable review findings**: `quality-scanner` flags critical issues that the implementer can't resolve after 2 review-fix cycles. Escalate to user.
+5. **Unresolvable review findings**: `quality-scanner` flags critical issues that the implementer can't resolve after 2 review-fix cycles. Mark the task `blocked`, finish the wave's other tasks, then present the unresolved findings to the user at end of wave — do not start the next wave without the user's decision.
 6. **File conflicts**: If parallel tasks in a wave produce conflicting changes to the same files, present the conflict to the user before proceeding.
 
 Everything else is autonomous. Don't ask for confirmation between waves.

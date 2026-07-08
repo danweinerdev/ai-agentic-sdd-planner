@@ -1,13 +1,14 @@
-Review commit `{{COMMIT_HASH}}` in `{{REPO_PATH}}` (branch `{{BRANCH}}`). Single commit labeled `{{COMMIT_MESSAGE}}`.
+Review change `{{CHANGE_REF}}` in `{{REPO_PATH}}` (VCS: `{{VCS}}`). A single commit/changelist labeled `{{CHANGE_MESSAGE}}`.
 
 Run **intent-blind**. Do not read any plan, spec, design, research, or debrief artifact. Evaluate strictly on code quality.
 
 ## Scope
-- Just commit `{{COMMIT_HASH}}`. Use `git show {{COMMIT_HASH}} --stat` and `git show {{COMMIT_HASH}} -- <file>` per file.
+- Just change `{{CHANGE_REF}}`. View it with `{{SHOW_COMMAND}}`.
+- If `{{VCS}}` is `none`, there is no change reference — review the files listed below directly.
 - Files touched:
 {{FILES_LIST}}
 
-## What the commit does (per its own message)
+## What the change does (per its own message)
 {{CLAIMED_CHANGES}}
 
 ## Specific things to verify
@@ -17,11 +18,11 @@ Run **intent-blind**. Do not read any plan, spec, design, research, or debrief a
 
 Render as a markdown table — `/implement`'s per-task-findings rendering needs the compact shape:
 
-| # | Severity | Lens | Location (file:line) | Finding |
+| # | Severity | Lens | Location | Finding |
 
-Each Finding cell contains the concrete defect plus the validation evidence (what you read/ran to confirm it).
+Location cells use `path:line` format. Each Finding cell contains the concrete defect plus the validation evidence (what you read/ran to confirm it).
 
-Severity vocabulary, lens vocabulary, validation discipline, and the recommendation block are defined in `shared/templates/quality-scan-output-format.md`. Read that file once and follow it. The summary: severities are **Critical / Major / Minor / Question**; lenses are **Correctness / Safety / Maintainability / Testing / Over-Engineering**; if you can't validate a finding, downgrade to Question rather than reporting a defect.
+Severity vocabulary, lens vocabulary, validation discipline, and the recommendation block are defined in `shared/templates/quality-scan-output-format.md`. The summary: severities are **Critical / Major / Minor / Question**; lenses are **Correctness / Safety / Maintainability / Testing / Over-Engineering**; if you can't validate a finding, downgrade to Question rather than reporting a defect.
 
 After the table, give a one-paragraph **Recommendation** (block / fix-then-accept / accept-with-followups / accept).
 
@@ -30,15 +31,22 @@ Do not include any plan-aware reasoning. Do not say "this matches the spec" or "
 <!--
 Placeholder reference:
 
-- COMMIT_HASH        — short SHA of the commit under review
+- CHANGE_REF         — the change reference from the implementer's
+                       report: short commit SHA (git), changelist
+                       number (perforce), or "n/a" (no VCS)
 - REPO_PATH          — absolute path to the target repo on disk
-- BRANCH             — branch the commit lives on (typically the
-                       branch the implementer pushed to)
-- COMMIT_MESSAGE     — the commit's own subject line, including the
-                       task id suffix if present (e.g.,
+- VCS                — the label /implement detected in step 2:
+                       git | git-worktree | perforce | none
+- SHOW_COMMAND       — the resolved, ready-to-run command to view the
+                       change, e.g. `git show <sha> --stat` (per-file:
+                       `git show <sha> -- <file>`) for git, or
+                       `p4 describe -s <changelist>` for perforce.
+                       Omit the Scope bullet for `none`.
+- CHANGE_MESSAGE     — the commit/changelist's own subject line,
+                       including the task id suffix if present (e.g.,
                        "ark-core: DependencyState (2.1)")
 - FILES_LIST         — bullet list of file paths touched by the
-                       commit. One bullet per file. The scanner uses
+                       change. One bullet per file. The scanner uses
                        this to scope its read budget.
 - CLAIMED_CHANGES    — the implementer's report of what changed,
                        paraphrased into 2–6 sentences. The scanner
