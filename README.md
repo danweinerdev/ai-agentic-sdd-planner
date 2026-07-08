@@ -11,7 +11,7 @@ SDD Planner is a standalone Claude Code **plugin**. When loaded (via `--plugin-d
 ```mermaid
 graph LR
     subgraph Plugin ["sdd-planner (plugin)"]
-        commands["commands/*.md"]
+        commands["commands/*/SKILL.md"]
         agents["agents/*.md"]
         manifest[".claude-plugin/plugin.json"]
     end
@@ -22,7 +22,7 @@ graph LR
 
     subgraph Project ["Your Project"]
         config["planning-config.json"]
-        artifacts["Plans/ Research/ Specs/ ..."]
+        artifacts["Plans/ Research/ Specs/ Diagrams/ ..."]
     end
 
     subgraph Optional ["sdd-dashboard (separate plugin)"]
@@ -102,7 +102,8 @@ Commands follow a natural planning progression. You don't have to use every step
 
 ```mermaid
 graph TD
-    research["/sdd-planner:research"] --> brainstorm["/sdd-planner:brainstorm"]
+    setup["/sdd-planner:setup"] --> research["/sdd-planner:research"]
+    research --> brainstorm["/sdd-planner:brainstorm"]
     brainstorm --> specify["/sdd-planner:specify"]
     specify --> design["/sdd-planner:design"]
     design --> plan["/sdd-planner:plan"]
@@ -122,6 +123,7 @@ graph TD
     poke -. "before approving" .-> plan
     excavate -. "understand code" .-> research
 
+    classDef setupC fill:#3a3a5a,stroke:#333,color:#fff
     classDef discovery fill:#4a6741,stroke:#333,color:#fff
     classDef definition fill:#5a4a7a,stroke:#333,color:#fff
     classDef execution fill:#6a5a3a,stroke:#333,color:#fff
@@ -129,6 +131,7 @@ graph TD
     classDef review fill:#3a5a6a,stroke:#333,color:#fff
     classDef utility fill:#555,stroke:#333,color:#fff
 
+    class setup setupC
     class research,brainstorm discovery
     class specify,design definition
     class plan execution
@@ -285,6 +288,8 @@ Recommended MCP servers to install for the best experience:
 | `"Planning"` (relative) | Artifacts live in a subdirectory of the current repo. Useful when planning lives next to code. |
 | `"/home/user/Code/my-planning-repo"` (absolute) | Artifacts live in an external directory, often shared by multiple code repos. |
 
+`/sdd-planner:setup` defaults `planningRoot` to `"."` — the target repo root — and re-running it preserves the `planningRoot` of an existing config rather than overwriting it.
+
 Plans can reference code in other repos via `repositories` and `planMapping`:
 
 ```json
@@ -347,9 +352,17 @@ sdd-planner/                       # The plugin itself (not your project)
 │   ├── spec-compliance.md
 │   └── spec-reviewer.md
 ├── shared/
-│   ├── frontmatter-schema.md     # Artifact metadata schema
-│   └── templates/                # Document templates
+│   ├── frontmatter-schema.md     # Artifact metadata schema (single source of truth)
+│   ├── path-resolution.md        # Canonical planning-root / plugin-dir / target-repo resolution
+│   ├── vcs-detection.md          # VCS detection algorithm + operations table (git / p4 / plain)
+│   ├── orchestration.md          # Orchestration model — primary context as tech lead
+│   ├── review-lanes.md           # Project-supplied review-lane socket convention
+│   ├── language-verification.md  # Language-specific verification — what good looks like
+│   ├── languages/                # Per-language verification references
+│   └── templates/                # Document templates (plan, spec, design, diagram, ...)
 ├── Makefile                      # make bump-patch / bump-minor / bump-major
+├── bump-version.py               # Version-bump helper used by the Makefile
+├── LICENSE
 ├── CLAUDE.md                     # Claude Code project instructions
 └── README.md
 ```

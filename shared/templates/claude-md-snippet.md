@@ -1,43 +1,26 @@
 ## Planning
 
-Planning artifacts under `{{PLANNING_ROOT}}/` — managed by the `sdd-planner` plugin.
-
-### Planning Structure
-```
-{{PLANNING_ROOT}}/
-├── planning-config.json          # Planning configuration
-├── Research/                     # Research artifacts
-├── Brainstorm/                   # Brainstorm artifacts
-├── Specs/                        # Specifications
-│   └── <feature>/README.md
-├── Designs/                      # Technical designs
-│   └── <component>/README.md
-├── Plans/                        # Implementation plans (flat — status in frontmatter)
-│   └── <PlanName>/
-│       ├── README.md
-│       ├── 01-Phase-Name.md
-│       └── notes/
-├── Retro/                        # Retrospectives
-│   └── YYYY-MM-DD-<slug>.md
-└── Dashboard/                    # Generated HTML (gitignored, written by the optional sdd-dashboard plugin)
-```
+Planning artifacts live at the planning root defined by `planning-config.json` (`planningRoot`, here `{{PLANNING_ROOT}}/`) — managed by the `sdd-planner` Claude Code plugin. Artifact directories: `Research/`, `Brainstorm/`, `Specs/<feature>/`, `Designs/<component>/`, `Plans/<PlanName>/`, `Retro/`, `Diagrams/`.
 
 ### Planning Skills
 | Skill | Purpose |
 |-------|---------|
-| `/research` | Investigate a topic → `{{PLANNING_ROOT}}/Research/<topic>.md` |
-| `/brainstorm` | Explore possibilities → `{{PLANNING_ROOT}}/Brainstorm/<topic>.md` |
-| `/specify` | Write requirements → `{{PLANNING_ROOT}}/Specs/<feature>/README.md` |
-| `/design` | Technical architecture → `{{PLANNING_ROOT}}/Designs/<component>/README.md` |
-| `/plan` | Create or expand an implementation plan → `{{PLANNING_ROOT}}/Plans/<Name>/` (deepens existing plans via gap analysis on re-run) |
-| `/code-review` | Orchestrated code review — drift + quality + spec compliance + blind spots |
-| `/debrief` | After-action notes for completed phases |
-| `/retro` | Capture learnings → `{{PLANNING_ROOT}}/Retro/YYYY-MM-DD-<slug>.md` |
+| `/sdd-planner:research` | Investigate a topic → `Research/<topic>.md` |
+| `/sdd-planner:brainstorm` | Explore possibilities → `Brainstorm/<topic>.md` |
+| `/sdd-planner:specify` | Write requirements → `Specs/<feature>/README.md` |
+| `/sdd-planner:design` | Technical architecture → `Designs/<component>/README.md` |
+| `/sdd-planner:plan` | Create or expand an implementation plan → `Plans/<Name>/` (deepens on re-run) |
+| `/sdd-planner:implement` | Execute a plan phase — implement tasks, track progress |
+| `/sdd-planner:simplify` | Post-implementation code cleanup and simplification |
+| `/sdd-planner:code-review` | Review code against the plan — drift, gaps, blind spots |
+| `/sdd-planner:debrief` | After-action notes for completed phases |
+| `/sdd-planner:retro` | Capture learnings → `Retro/YYYY-MM-DD-<slug>.md` |
+| `/sdd-planner:poke-holes` | Adversarial critical analysis of any artifact |
+| `/sdd-planner:tend` | Artifact hygiene — verify statuses, tags, conventions |
+| `/sdd-planner:diagram` | Generate Mermaid diagrams → `Diagrams/<slug>.md` |
+| `/sdd-planner:excavate` | Progressive codebase discovery → `Research/<slug>.md` |
+| `/sdd-planner:setup` | Set up a repo — generates planning-config.json, bootstraps directories |
 
-If the optional `sdd-dashboard` plugin is installed:
-| `/sdd-dashboard:dashboard` | Regenerate HTML dashboard into `{{PLANNING_ROOT}}/Dashboard/` |
-| `/sdd-dashboard:status` | Quick text status summary (read-only) |
+Typical lifecycle: `setup → research → brainstorm → specify → design → plan → implement → code-review → simplify → debrief → retro` (all `/sdd-planner:*`).
 
-### Planning Configuration
-See `{{PLANNING_ROOT}}/planning-config.json`.
-The HTML dashboard is provided by the optional companion plugin [`sdd-dashboard`](https://github.com/danweinerdev/sdd-dashboard-plugin). Opt in by setting `"dashboard": true` in `planning-config.json`, then run `/sdd-dashboard:dashboard` from Claude.
+Optional: install the companion `sdd-dashboard` plugin for `/sdd-dashboard:dashboard` (HTML) and `/sdd-dashboard:status` (text summary); opt in with `"dashboard": true` in `planning-config.json`.
