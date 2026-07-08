@@ -27,3 +27,28 @@ The primary context acts as a **tech lead** — it reads enough to make informed
 4. **Parallelize independent work.** When multiple agents can work independently (e.g., implementing tasks in a wave, scanning different artifact types), launch them concurrently.
 
 5. **Resume agents for follow-ups.** When an agent's work needs a correction or continuation, resume it rather than starting fresh — preserves context and avoids re-reading.
+
+## Session Onboarding
+
+Orientation read order at the start of a planning session — frontmatter answers most orientation questions; read bodies only when the decision at hand needs them:
+
+1. `planning-config.json` — planning root, repository mappings
+2. The active plan's README **frontmatter** — status, `phases[]`, `related` (not the body)
+3. The current phase doc — task list, statuses, verification fields, traps
+4. The latest debrief in `Plans/<PlanName>/notes/` — constraints and gotchas discovered last time
+
+## After a Context Compaction
+
+Summaries drop operational detail and misremember statuses. Before resuming work after compaction, re-read from disk:
+
+- The current phase doc's `tasks[]` statuses — the frontmatter is the source of truth for what's done; never trust the summary's recollection of it
+- The plan README frontmatter
+- Any escalation or question that was presented to the user and not yet answered
+
+Do **not** re-read spec/design bodies wholesale after compaction — delegate that to agents, same as always.
+
+## Tool Routing for Context Economy
+
+- **Frontmatter-first**: when only statuses or fields are needed, stop reading at the end of the frontmatter.
+- **Glob to check existence, Grep to locate, agent to comprehend** — don't read a file to answer a question its path or one line can answer.
+- **Statuses scope reads**: skills filter artifacts by frontmatter `status` before reading anything (active plans, approved specs) — never scan a directory's bodies indiscriminately.

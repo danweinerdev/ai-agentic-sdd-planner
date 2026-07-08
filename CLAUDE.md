@@ -18,7 +18,8 @@ sdd-planner/                      # Repository root = plugin root
 │   ├── frontmatter-schema.md     # Single source of truth for artifact metadata
 │   ├── path-resolution.md        # Canonical planning-root / plugin-dir / target-repo resolution
 │   ├── vcs-detection.md          # VCS detection algorithm + operations table (git / p4 / plain)
-│   ├── orchestration.md          # Orchestration model — primary context as tech lead
+│   ├── orchestration.md          # Orchestration model, session onboarding, post-compaction re-reads
+│   ├── autonomy.md               # Cross-skill autonomy table — what runs solo vs stops for the user
 │   ├── review-lanes.md           # Project-supplied review-lane socket convention
 │   ├── language-verification.md  # Language-specific verification — what good looks like
 │   ├── languages/                # Per-language verification references

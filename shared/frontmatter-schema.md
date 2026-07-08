@@ -18,6 +18,8 @@ related: [Specs/FeatureName, Research/topic-slug.md]
 
 `related` entries are planning-root-relative: use the **directory** path for specs, designs, and plans (`Specs/FeatureName`, `Designs/ComponentName`, `Plans/PlanName`), and the **file** path for flat artifacts (`Research/topic-slug.md`, `Brainstorm/topic-slug.md`, `Retro/YYYY-MM-DD-slug.md`, `Diagrams/slug.md`). Consumers that need the document behind a directory entry append `/README.md`.
 
+Any artifact may additionally declare an optional `refresh_when` field — a list of event-shaped trigger descriptions that force a refresh (e.g., `refresh_when: ["dependency X ships v3", "Specs/Payments changes", "vendor answers the webhooks question"]`). `/tend` checks these: a fired trigger makes the artifact stale regardless of its `updated` date; demonstrably-unfired triggers exempt it from the default 30-day staleness rule.
+
 ## Status Values by Type
 
 | Type | Statuses |
@@ -59,7 +61,7 @@ phases:
 ---
 ```
 
-Body contains: Overview, Architecture, Key Decisions, Dependencies.
+Body contains: Overview, Architecture, Key Decisions, Dependencies, Open Questions (omit when empty — a plan cannot be `approved` while an in-scope question is unanswered).
 No status tables in the body — the dashboard reads phases from frontmatter.
 
 ### Phase Doc (01-Phase-Title.md)
@@ -108,6 +110,11 @@ Body contains task detail sections keyed by task ID as headings:
 
 ### Notes
 Implementation notes...
+
+### Trap
+Optional — only for tasks with a known tempting-but-wrong shortcut. Names
+the shortcut a hasty implementer would take and why it's wrong. /implement
+passes it verbatim to the implementer's dispatch.
 ```
 
 ## Debrief Schema

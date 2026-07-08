@@ -12,7 +12,7 @@ The plugin directory contains `commands/`, `agents/`, and `shared/` as siblings.
 - When you need to break down a feature, project, or initiative into an actionable plan with phases, tasks, subtasks, and verification criteria.
 - When you want to deepen an existing plan — add tasks, fill in missing verification, expand subtask checklists, or refine acceptance criteria as you learn more.
 
-Both cases run through the same process below. The skill detects whether the named plan already exists and switches into **Revise mode** automatically.
+Both cases run through the same process below. The skill detects whether the named plan already exists and switches into **Revise mode** automatically. High-risk plans can optionally be **rehearsed** — dry-run in a scratch worktree to shake out plan bugs — before approval (step 6).
 
 ## Process
 
@@ -52,8 +52,9 @@ Use this structured summary as the input to step 3 — every drafting decision s
 - Preserve existing task IDs and ordering. Append new tasks with the next available ID in their phase.
 
 **Both modes:**
-- **Every task must have a `verification` field** — a specific answer to "how do we know this work is good and complete?" that names specific behaviors to cover (e.g., "parser handles valid, malformed, and empty input", "endpoint returns 200 with valid payload and 400 with missing fields"). Vague criteria like "works correctly" or test counts are not acceptable — verification means each new or changed behavior has a corresponding check. In Revise mode, audit existing tasks and add `verification` to any that lack it.
+- **Every task must have a `verification` field** — a specific answer to "how do we know this work is good and complete?" that names specific behaviors to cover (e.g., "parser handles valid, malformed, and empty input", "endpoint returns 200 with valid payload and 400 with missing fields"). Vague criteria like "works correctly" or test counts are not acceptable — verification means each new or changed behavior has a corresponding check. Wherever the check is commandable, `verification` also names the exact command to run and the expected observable output (e.g., `cargo test auth::` — 14 tests pass, including the new refresh-expiry case), not just prose criteria. Prose-only criteria are acceptable only when no command can observe the behavior. "Works correctly" is never acceptable. In Revise mode, audit existing tasks and add `verification` to any that lack it.
 - **Include structural verification:** Read `shared/language-verification.md` and detect the target project language. Include the language-appropriate structural checks (sanitizers, static analysis, type checking) in verification fields where relevant — either per-task or as a dedicated verification task in each phase.
+- **Gated scope.** A task whose correctness depends on an unanswered question only an external party can answer (the user, a stakeholder, a vendor, another team) must NOT be created provisionally. A "⚠️ pending confirmation" note is not a gate — a model will implement past it. Instead: either cut the work from scope, or create the phase with `status: blocked` naming the open question in the phase doc, and record the question in the plan README's Open Questions. A plan cannot move to `approved` while any in-scope task is gated on an unanswered external question.
 - Present the structure (phases, tasks, refinements) to the user for feedback before writing files.
 
 ### 4. Write Plan Files
@@ -74,10 +75,11 @@ Use this structured summary as the input to step 3 — every drafting decision s
 For each task, write a `## <ID>: Task Title` section that includes:
 - **`### Subtasks`** — a checklist (`- [ ]`) of the concrete implementation steps the implementer will work through. Not "implement X" — the actual steps a person would tick off (e.g., "add migration", "wire the handler", "cover the empty-input case in tests").
 - **`### Notes`** — implementation guidance, edge cases, references to specific design sections, gotchas the researcher surfaced. If a task can't be broken into subtasks because it depends on research the implementer will do, say that explicitly here — don't leave the section blank.
+- **`### Trap` (optional)** — for any task with a known tempting-but-wrong shortcut, name the shortcut and why it's wrong (e.g., "You will want to mock the clock here — don't; the race being tested lives in the real timer path."). Traps are written for a hasty model reading the task in isolation. Don't invent traps for tasks that have none.
 
 Plus:
 - Phase-level **Acceptance Criteria** as a checklist.
-- Plan README sections: **Overview**, **Architecture** (with Mermaid diagrams where structure helps — prefer `graph TD` / `flowchart LR` over ASCII art), **Key Decisions**, **Dependencies**.
+- Plan README sections: **Overview**, **Architecture** (with Mermaid diagrams where structure helps — prefer `graph TD` / `flowchart LR` over ASCII art), **Key Decisions**, **Dependencies**, and **Open Questions** (only when gated scope produced any — see step 3).
 
 Shallow tasks with no subtasks or notes are not acceptable output — they're the failure mode this skill exists to prevent.
 
@@ -85,7 +87,18 @@ Shallow tasks with no subtasks or notes are not acceptable output — they're th
 
 - Invoke the `sdd-planner:plan-reviewer` agent to review the complete plan.
 - Address any issues raised by the reviewer.
-- Once review passes:
+
+### 6. Rehearse (optional dry run)
+
+- Offer rehearsal when the plan is high-risk: multiple phases touching unfamiliar code, external API integration, data migrations, or the user asks for it. Otherwise skip this step silently.
+- **Mechanics:** create a scratch git worktree of the target repo (or a full copy for non-git targets) — never rehearse against the live tree. Dispatch `sdd-planner:code-implementer` agents into the scratch tree to execute the plan's tasks literally, wave by wave, with the same evidence rules as `/implement` (verification output pasted, STOP on plan-vs-reality mismatch).
+- **The product is plan bugs, not code:** wrong file paths, impossible task order, missing prerequisites, underspecified tasks, verification commands that don't run as written, traps that were missed. Collect them, discard the scratch tree and all code, and fix the plan before it moves to `approved`.
+- **Cost:** rehearsal roughly doubles the implementation spend for the rehearsed scope — that's why it's opt-in and aimed at high-risk plans.
+
+### 7. Approve
+
+- Before setting `status: approved`, confirm no in-scope work is gated on an unanswered external question — blocking questions must be resolved or the affected phase marked `blocked`.
+- Once review passes (and any rehearsal findings are fixed):
   - **Create mode:** update the plan README frontmatter `status` to `approved`.
   - **Revise mode:** if `status` is `draft`, set it to `approved` once the review passes (same as Create mode — a re-run on a never-approved plan must not strand it in `draft`); otherwise leave `status` as-is.
 - Then re-read the frontmatter and confirm it parses as YAML and includes `title`, `type`, `status`, `created`, `updated`, `tags`, `related`.
@@ -110,6 +123,7 @@ See `shared/frontmatter-schema.md` for the plan frontmatter schema. Body contain
 - **Architecture**: High-level technical approach, with Mermaid diagrams
 - **Key Decisions**: Major choices and rationale
 - **Dependencies**: External prerequisites
+- **Open Questions**: Unanswered external questions gating `blocked` phases (omit when there are none)
 
 ### Phase Docs
 See `shared/frontmatter-schema.md` for the phase frontmatter schema. Body contains:
@@ -117,6 +131,7 @@ See `shared/frontmatter-schema.md` for the phase frontmatter schema. Body contai
 - **Task sections**: Each headed by task ID (e.g., `## 1.1: Task Title`) with:
   - `### Subtasks` — checklist of concrete implementation steps
   - `### Notes` — implementation guidance, edge cases, design references
+  - `### Trap` — optional; the known tempting-but-wrong shortcut for this task and why it's wrong (omit when a task has none)
 - **Acceptance Criteria**: Phase-level completion criteria as a checklist
 
 ## Context
@@ -126,4 +141,4 @@ See `shared/frontmatter-schema.md` for the phase frontmatter schema. Body contai
 - Existing plans: `Plans/` (status in each plan's `README.md` frontmatter)
 - Related specs: `Specs/`
 - Related designs: `Designs/`
-- Agents: `sdd-planner:researcher`, `sdd-planner:plan-reviewer`
+- Agents: `sdd-planner:researcher`, `sdd-planner:plan-reviewer`, `sdd-planner:code-implementer` (rehearsal only)

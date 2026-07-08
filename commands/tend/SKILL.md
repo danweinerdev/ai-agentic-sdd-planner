@@ -99,6 +99,8 @@ Invoke the `sdd-planner:researcher` agent to scan all plans under `Plans/` and c
 - Research/brainstorm still `active` but frontmatter `updated` more than 30 days before today → flag as potentially stale
 - Phase status `in-progress` but no task has started → flag inconsistency
 
+**Refresh triggers**: Artifacts may declare an optional `refresh_when` frontmatter field — a list of event-shaped trigger descriptions (e.g., "dependency X ships v3", "Specs/Payments changes", "the vendor answers the webhooks question"). For artifacts that declare it: report each artifact with its triggers and ask the user which (if any) have fired — fired triggers make the artifact stale regardless of its `updated` date, and an artifact whose triggers have all demonstrably not fired is NOT stale even past 30 days. Artifacts without `refresh_when` keep the 30-day rule above. Where a trigger names another artifact (e.g., "Specs/Payments changes"), check that artifact's `updated` date yourself instead of asking.
+
 ### Tags Mode
 Invoke the `sdd-planner:researcher` agent to scan all artifact frontmatter for tags and analyze for variants, orphans, missing tags, and clusters. The agent returns the analysis. Checks to perform:
 - **Variants**: Find tags that are likely the same thing (`api`/`APIs`/`rest-api`)
