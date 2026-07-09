@@ -28,6 +28,8 @@ The primary context acts as a **tech lead** — it reads enough to make informed
 
 5. **Resume agents for follow-ups.** When an agent's work needs a correction or continuation, resume it rather than starting fresh — preserves context and avoids re-reading.
 
+6. **The decision framework binds the primary context too.** `shared/decision-framework.md` is the universal decision discipline — premise checks before complying, run-to-verify for any commandable claim, documented searches behind absence claims, verbatim failure reporting, no downscoping by imagined effort. Agents carry its digest in their bodies; the primary context applies the full framework directly, especially when synthesizing agent reports (don't launder an agent's unverified claim into a verified-sounding summary).
+
 ## Session Onboarding
 
 Orientation read order at the start of a planning session — frontmatter answers most orientation questions; read bodies only when the decision at hand needs them:

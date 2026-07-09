@@ -22,6 +22,7 @@ sdd-planner/                      # Repository root = plugin root
 │   ├── vcs-detection.md          # VCS detection algorithm + operations table (git / p4 / plain)
 │   ├── orchestration.md          # Orchestration model, session onboarding, post-compaction re-reads
 │   ├── autonomy.md               # Cross-skill autonomy table — what runs solo vs stops for the user
+│   ├── decision-framework.md     # Universal decision discipline for all skills and agents, any model
 │   ├── review-lanes.md           # Project-supplied review-lane socket convention
 │   ├── language-verification.md  # Language-specific verification — what good looks like
 │   ├── languages/                # Per-language verification references
@@ -51,6 +52,9 @@ All artifacts use YAML frontmatter as the machine-readable data layer. See `shar
 
 ### VCS-agnostic operations
 The plugin works with git, git worktrees, Perforce, and unversioned directories. Skills that inspect files or history detect the VCS first using the algorithm in `shared/vcs-detection.md`, then use the corresponding command from that file's operations table (`git mv` / `p4 move` / plain `mv`, `git diff` / `p4 diff2`, etc.). Don't hard-code `git` in skills. Likewise, path resolution (planning root, plugin directory, target repo) is defined once in `shared/path-resolution.md` — the single source of truth; don't re-derive it in skills.
+
+### Decision framework
+Every context this plugin runs in — primary-context skills and all agents, on any model — follows the universal decision discipline in `shared/decision-framework.md` (premise checks before complying, run-to-verify for commandable claims, documented searches behind absence claims, verbatim failure reporting, no downscoping by imagined effort). Each agent embeds the framework's canonical digest block verbatim as a `## Decision Framework` section; `shared/orchestration.md` binds the primary context. When editing the framework, re-sync the embedded block in every agent.
 
 ### Plan Hierarchy
 ```
@@ -218,6 +222,7 @@ When adding, removing, or renaming skills (`commands/`), agents (`agents/`), or 
 - **`shared/templates/claude-md-full.md`** — full CLAUDE.md template for a planning-only repo (skill table, agent table, workflow lifecycle)
 - **`shared/templates/claude-md-snippet.md`** — embeddable section to drop into an existing project's CLAUDE.md (skill table only)
 - **Templates ↔ schema ↔ `/tend`** — when changing any template or `shared/frontmatter-schema.md`, verify every template still satisfies `/tend`'s completeness checks (required fields present, statuses valid)
+- **`shared/decision-framework.md` ↔ agents** — when changing the framework, update the canonical agent block in that file and re-sync the identical `## Decision Framework` section in all eight `agents/*.md`
 
 ## Versioning
 
