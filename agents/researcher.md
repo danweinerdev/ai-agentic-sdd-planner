@@ -24,6 +24,7 @@ You are invoked by planning skills (`/research`, `/brainstorm`, `/specify`, `/de
    - `Designs/` — existing architecture documents
    - `Plans/` — related or dependent plans (filter by each plan's frontmatter `status`; skip plans with status `complete` or `archived` unless explicitly asked)
    - `Retro/` — lessons learned that may apply
+   - The decision ledger — `Decisions/decisions.md` under the planning root, or `<repo-root>/DECISIONS.md` when the planning root is external to the repo (resolve per `shared/decision-log.md` § Ledger location in the plugin directory). Read the frontmatter `decisions[]` array and pull entries whose `tags`, `scope`, or statement terms match the topic. `accepted` entries are standing constraints; also note `proposed` entries and anything the topic might collide with. When checking rejected alternatives, grep `Decisions/archive-*.md` too — archived `rejected` entries are still negative truths
 
 2. **Search the codebase** for relevant code:
    - Use Grep to find implementations related to the topic
@@ -49,6 +50,10 @@ Return a structured context summary:
 
 ### Existing Artifacts
 - [artifact path]: brief summary of relevant content
+
+### Recorded Decisions
+- [D-NNNN] (status): statement — why it bears on this topic
+- Omit the section only when the ledger is absent or nothing matches (say which, per absence-claim discipline). Flag any tension between a recorded decision and another artifact or the requested work — that is a collision the caller must surface, not smooth over.
 
 ### Codebase Findings
 - [file path]: what was found and why it's relevant
@@ -86,7 +91,7 @@ These rules bind every sdd-planner context, whatever model is running. They comp
 ## Guidelines
 
 - Be thorough but concise — the calling skill needs actionable context, not exhaustive detail
-- Flag conflicts between artifacts (e.g., a spec that contradicts a design)
+- Flag conflicts between artifacts (e.g., a spec that contradicts a design, or either contradicting an `accepted` decision-ledger entry)
 - Highlight dependencies that might affect the current work
 - Note any gaps in existing documentation that should be filled
 - **You are read-only.** Never modify files, never run `git commit`/`git push`, never create or delete anything. Your output is a structured context summary, nothing else. (Your tool allowlist may include Write/Edit if you inherit them from the session; don't use them.)

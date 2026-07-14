@@ -34,6 +34,7 @@ Per-task reviews during `/implement` dispatch `quality-scanner` directly (not th
 ### 3. Load Context
 - Extract spec and design **paths** from the plan README's `related` frontmatter — do not read their bodies in the primary context; the implementer agents read what they need (they have all tools). Pass the paths in each dispatch.
 - Skim any previous phase debriefs in `Plans/<PlanName>/notes/` for constraints and gotchas that affect task dispatch — these are short and orchestration-relevant, so a primary-context read is appropriate.
+- Read the decision ledger's frontmatter, if one exists (resolve per `shared/decision-log.md` § Ledger location — for external planning roots this is the target repo's `DECISIONS.md`), and note `accepted` entries scoped to this plan or its related specs/designs — pass the relevant statements to implementer dispatches as constraints. Never pass ledger content to `quality-scanner` — it is intent context and the scanner is intent-blind.
 - What you need in the primary context is just enough to scope and dispatch: the phase's deliverable, task list, dependencies, and any prior-phase warnings.
 
 ### 4. Verify Task Readiness
@@ -214,6 +215,8 @@ These conditions require stopping and asking the user:
 6. **File conflicts**: If parallel tasks in a wave produce conflicting changes to the same files, present the conflict to the user before proceeding.
 
 Everything else is autonomous. Don't ask for confirmation between waves.
+
+**Record escalation resolutions.** When the user answers an escalation (rules 1–5) with a choice that constrains future work — an ambiguity resolved, scope accepted or cut, an approach picked for a blocked task — record it in the decision ledger per `shared/decision-log.md` (collision check before appending; a collision is itself a stop). If the fresh answer collides with an accepted entry, use the ledger's **one-step supersession**: "this supersedes D-NNNN — confirm?" — don't make the user relitigate what they just decided. Scope the entry to the plan. Pure one-off dispositions ("retry it", "skip for now") are events, not decisions — don't log them.
 
 ## Output
 Updates existing plan artifacts in place:

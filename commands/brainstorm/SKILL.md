@@ -38,6 +38,7 @@ When you need to generate and evaluate multiple approaches to a problem before c
 
 6. **Finalize**
    - Set `status: active` in the frontmatter once the document is complete and presented to the user. Then re-read the frontmatter and confirm it parses as YAML and includes `title`, `type`, `status`, `created`, `updated`, `tags`, `related`.
+   - **If the user explicitly accepts the recommendation**, record it in the decision ledger per `shared/decision-log.md` — the rejected ideas go in the entry's `rejected[]`; run the collision check first (a collision stops for the user). A recommendation merely presented, not endorsed, is either left unrecorded or logged as `status: proposed` — never `accepted`.
 
 ## Output
 ```

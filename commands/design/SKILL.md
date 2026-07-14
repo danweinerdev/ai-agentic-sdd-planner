@@ -36,10 +36,14 @@ When you need to define the technical architecture for a component or system bef
    - After findings are addressed and the user explicitly approves, set `status: approved`. If the user declines or defers, leave it at `review`.
    - Then re-read the frontmatter and confirm it parses as YAML and includes `title`, `type`, `status`, `created`, `updated`, `tags`, `related`.
 
+5. **Record Decisions**
+   - After approval, record in the decision ledger per `shared/decision-log.md`: each Design Decision the user weighed in on (its rejected options go in the entry's `rejected[]`) and each user-resolved open question. Run the collision check before each append — a collision stops for the user. Scope entries to `Designs/<ComponentName>`, and **cite each new entry's id inline** in the governed Design Decision section (e.g., "(D-0012)") — the bidirectional link is what makes supersession detection work. Design Decisions the user never engaged with are the design's own content — don't promote them as `accepted`.
+
 ## Output
 ```
 Designs/<ComponentName>/README.md
 ```
+Plus decision-ledger entries in `Decisions/decisions.md` for user-made design choices and resolved questions.
 
 ## Document Structure
 See `shared/templates/design.md`:

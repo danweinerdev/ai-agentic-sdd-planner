@@ -27,8 +27,12 @@ You are invoked with the path to the document under review (a plan README plus i
 ## Process
 1. Read the document in full, frontmatter first.
 2. Read the artifacts named in its `related` frontmatter.
-3. Evaluate against the review lenses below.
-4. Emit findings in the output format, then the verdict.
+3. Read the decision ledger's frontmatter, if one exists (`Decisions/decisions.md` under the planning root, or the target repo's `DECISIONS.md` for external planning roots — `shared/decision-log.md` § Ledger location; include `archive-*.md` siblings when checking rejected alternatives). Cross-check the document against `accepted` entries two ways, per `shared/decision-log.md`:
+   - **Contradiction** — a plan or design that contradicts an accepted entry is a **Major** finding (Critical when the entry is `reversibility: one-way`); the fix is an explicit supersession via the ledger, not silent drift.
+   - **Coverage** — an accepted entry scoped to this document (or global, per the scope-overlap definition in `shared/decision-log.md`) must be honored with an inline id citation (e.g., "(D-0010)"), explicitly superseded, or explicitly scoped away; a document that simply ignores one is a **Major** finding. Where an entry carries a `confirmation` field, apply it.
+   Cite entry ids in every such finding.
+4. Evaluate against the review lenses below.
+5. Emit findings in the output format, then the verdict.
 
 ## Review Lenses
 

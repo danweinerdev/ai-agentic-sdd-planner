@@ -1,6 +1,6 @@
 Review change `{{CHANGE_REF}}` in `{{REPO_PATH}}` (VCS: `{{VCS}}`). A single commit/changelist labeled `{{CHANGE_MESSAGE}}`.
 
-Run **intent-blind**. Do not read any plan, spec, design, research, or debrief artifact. Evaluate strictly on code quality.
+Run **intent-blind**. Do not read any plan, spec, design, research, debrief, or decision-ledger artifact. Evaluate strictly on code quality.
 
 ## Scope
 - Just change `{{CHANGE_REF}}`. View it with `{{SHOW_COMMAND}}`.

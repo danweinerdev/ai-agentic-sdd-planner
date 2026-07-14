@@ -47,7 +47,10 @@ When a plan phase has been completed (or substantially completed) and you want t
    - Fill in all sections: Decisions Made, Requirements Assessment, Deviations, Risks & Issues, Lessons Learned, Impact on Subsequent Phases, **Skill Opportunities**
    - The filename mirrors the phase doc number (e.g., `01-Core-Setup.md` -> `notes/01-Core-Setup.md`)
 
-5. **Update Phase Status**
+5. **Backfill the Decision Ledger**
+   - For each item in Decisions Made that the user confirmed (step 2) and that isn't already in `Decisions/decisions.md`, append an entry per `shared/decision-log.md` — collision check first; a collision stops for the user. Scope entries to the plan. This is the safety net for decisions made mid-implementation that escaped capture.
+
+6. **Update Phase Status**
    - Set the phase status to `complete` in both:
      - The phase doc frontmatter
      - The plan README's `phases[]` array

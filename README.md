@@ -6,7 +6,7 @@ For the optional HTML dashboard view of these artifacts, install the companion [
 
 ## How It Works
 
-SDD Planner is a standalone Claude Code **plugin**. When loaded (via `--plugin-dir` or through a marketplace), it registers 15 slash commands (namespaced under `/sdd-planner:*`) and 8 review/implementation agents that Claude can delegate to. All artifacts are Markdown files with YAML frontmatter — companion tools (like `sdd-dashboard`) read frontmatter exclusively, so there's no brittle table parsing.
+SDD Planner is a standalone Claude Code **plugin**. When loaded (via `--plugin-dir` or through a marketplace), it registers 16 slash commands (namespaced under `/sdd-planner:*`) and 8 review/implementation agents that Claude can delegate to. All artifacts are Markdown files with YAML frontmatter — companion tools (like `sdd-dashboard`) read frontmatter exclusively, so there's no brittle table parsing.
 
 ```mermaid
 graph LR
@@ -90,7 +90,8 @@ All commands are namespaced as `/sdd-planner:*` automatically by the plugin syst
 | Command | Purpose | Output |
 |---------|---------|--------|
 | `/sdd-planner:poke-holes` | Adversarial critical analysis | Inline findings (no artifact) |
-| `/sdd-planner:tend` | Artifact hygiene | Updates stale statuses, tags, conventions |
+| `/sdd-planner:decide` | Record, look up, or reconcile decided truths in the decision ledger | `Decisions/decisions.md` entries |
+| `/sdd-planner:tend` | Artifact hygiene (incl. decision-ledger audit) | Updates stale statuses, tags, conventions |
 | `/sdd-planner:diagram` | Generate Mermaid diagrams | `Diagrams/<subject>.md` or inline |
 | `/sdd-planner:excavate` | Progressive codebase discovery | `Research/<codebase>.md` |
 
@@ -114,6 +115,7 @@ graph TD
     debrief --> retro["/sdd-planner:retro"]
 
     poke["⚡ /sdd-planner:poke-holes"]
+    decide["📌 /sdd-planner:decide"]
     tend["🔧 /sdd-planner:tend"]
     diagram["📊 /sdd-planner:diagram"]
     excavate["🔍 /sdd-planner:excavate"]
@@ -137,7 +139,7 @@ graph TD
     class plan execution
     class implement,codereview,simplify implementation
     class debrief,retro review
-    class poke,tend,diagram,excavate utility
+    class poke,decide,tend,diagram,excavate utility
 ```
 
 | Phase | Commands | What happens |
@@ -148,7 +150,7 @@ graph TD
 | **Execution** | `plan` | Structure work into phases, tasks, subtasks (re-run to deepen an existing plan) |
 | **Implementation** | `implement`, `code-review`, `simplify` | Build it, verify it, then clean it up |
 | **Review** | `debrief`, `retro` | Capture what happened and what you learned |
-| **Utilities** | `poke-holes`, `tend`, `diagram`, `excavate` | Challenge, maintain, visualize, explore |
+| **Utilities** | `poke-holes`, `decide`, `tend`, `diagram`, `excavate` | Challenge, record truth, maintain, visualize, explore |
 
 ## Plan Hierarchy
 
@@ -330,6 +332,7 @@ sdd-planner/                       # The plugin itself (not your project)
 │   ├── brainstorm/SKILL.md
 │   ├── code-review/SKILL.md
 │   ├── debrief/SKILL.md
+│   ├── decide/SKILL.md
 │   ├── design/SKILL.md
 │   ├── diagram/SKILL.md
 │   ├── excavate/SKILL.md
@@ -344,6 +347,7 @@ sdd-planner/                       # The plugin itself (not your project)
 │   └── tend/SKILL.md
 ├── skills/                       # Model-only reference skills (auto-loaded by description, not /-invocable)
 │   ├── cpp-specifications/SKILL.md
+│   ├── decision-log/SKILL.md
 │   ├── go-specifications/SKILL.md
 │   ├── java-specifications/SKILL.md
 │   ├── python-specifications/SKILL.md
@@ -359,12 +363,16 @@ sdd-planner/                       # The plugin itself (not your project)
 │   ├── researcher.md
 │   ├── spec-compliance.md
 │   └── spec-reviewer.md
+├── hooks/
+│   ├── hooks.json                # Plugin hooks — SessionStart decision-ledger injection
+│   └── load-decisions.sh         # Emits accepted ledger entries as additionalContext
 ├── shared/
 │   ├── frontmatter-schema.md     # Artifact metadata schema (single source of truth)
 │   ├── path-resolution.md        # Canonical planning-root / plugin-dir / target-repo resolution
 │   ├── vcs-detection.md          # VCS detection algorithm + operations table (git / p4 / plain)
 │   ├── orchestration.md          # Orchestration model, session onboarding, post-compaction re-reads
 │   ├── autonomy.md               # Cross-skill autonomy table — what runs solo vs stops for the user
+│   ├── decision-log.md           # Decision ledger — entry schema, capture triggers, collision procedure
 │   ├── review-lanes.md           # Project-supplied review-lane socket convention
 │   ├── language-verification.md  # Language-specific verification — what good looks like
 │   ├── languages/                # Per-language verification references

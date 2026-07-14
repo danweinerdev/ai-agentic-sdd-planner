@@ -128,6 +128,7 @@ Resolve the planning root path *for this step only*: if relative, join with the 
 <resolved-planning-root>/Designs/
 <resolved-planning-root>/Retro/
 <resolved-planning-root>/Diagrams/
+<resolved-planning-root>/Decisions/
 ```
 
 Plan lifecycle is tracked in each plan's README frontmatter `status` field — `Plans/` stays flat.

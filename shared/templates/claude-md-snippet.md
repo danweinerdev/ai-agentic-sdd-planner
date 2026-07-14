@@ -1,6 +1,6 @@
 ## Planning
 
-Planning artifacts live at the planning root defined by `planning-config.json` (`planningRoot`, here `{{PLANNING_ROOT}}/`) — managed by the `sdd-planner` Claude Code plugin. Artifact directories: `Research/`, `Brainstorm/`, `Specs/<feature>/`, `Designs/<component>/`, `Plans/<PlanName>/`, `Retro/`, `Diagrams/`.
+Planning artifacts live at the planning root defined by `planning-config.json` (`planningRoot`, here `{{PLANNING_ROOT}}/`) — managed by the `sdd-planner` Claude Code plugin. Artifact directories: `Research/`, `Brainstorm/`, `Specs/<feature>/`, `Designs/<component>/`, `Plans/<PlanName>/`, `Retro/`, `Decisions/`, `Diagrams/`.
 
 ### Planning Skills
 | Skill | Purpose |
@@ -15,8 +15,9 @@ Planning artifacts live at the planning root defined by `planning-config.json` (
 | `/sdd-planner:code-review` | Review code against the plan — drift, gaps, blind spots |
 | `/sdd-planner:debrief` | After-action notes for completed phases |
 | `/sdd-planner:retro` | Capture learnings → `Retro/YYYY-MM-DD-<slug>.md` |
+| `/sdd-planner:decide` | Record, look up, or reconcile decided truths → `Decisions/decisions.md` |
 | `/sdd-planner:poke-holes` | Adversarial critical analysis of any artifact |
-| `/sdd-planner:tend` | Artifact hygiene — verify statuses, tags, conventions |
+| `/sdd-planner:tend` | Artifact hygiene — verify statuses, tags, conventions, decision ledger |
 | `/sdd-planner:diagram` | Generate Mermaid diagrams → `Diagrams/<slug>.md` |
 | `/sdd-planner:excavate` | Progressive codebase discovery → `Research/<slug>.md` |
 | `/sdd-planner:setup` | Set up a repo — generates planning-config.json, bootstraps directories |

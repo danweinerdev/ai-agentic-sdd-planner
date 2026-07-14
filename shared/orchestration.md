@@ -35,9 +35,10 @@ The primary context acts as a **tech lead** — it reads enough to make informed
 Orientation read order at the start of a planning session — frontmatter answers most orientation questions; read bodies only when the decision at hand needs them:
 
 1. `planning-config.json` — planning root, repository mappings
-2. The active plan's README **frontmatter** — status, `phases[]`, `related` (not the body)
-3. The current phase doc — task list, statuses, verification fields, traps
-4. The latest debrief in `Plans/<PlanName>/notes/` — constraints and gotchas discovered last time
+2. The decision ledger's **frontmatter**, if it exists (`Decisions/decisions.md` under the planning root, or `<repo-root>/DECISIONS.md` for external planning roots — `shared/decision-log.md` § Ledger location) — `accepted` entries are standing constraints on all planning work
+3. The active plan's README **frontmatter** — status, `phases[]`, `related` (not the body)
+4. The current phase doc — task list, statuses, verification fields, traps
+5. The latest debrief in `Plans/<PlanName>/notes/` — constraints and gotchas discovered last time
 
 ## After a Context Compaction
 
@@ -45,6 +46,7 @@ Summaries drop operational detail and misremember statuses. Before resuming work
 
 - The current phase doc's `tasks[]` statuses — the frontmatter is the source of truth for what's done; never trust the summary's recollection of it
 - The plan README frontmatter
+- The decision ledger frontmatter (`Decisions/decisions.md`) — summaries misremember which decision won; the ledger's `accepted` entries are the truth
 - Any escalation or question that was presented to the user and not yet answered
 
 Do **not** re-read spec/design bodies wholesale after compaction — delegate that to agents, same as always.

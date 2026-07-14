@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/load-decisions.sh\"",
+            "timeout": 10,
+            "statusMessage": "Loading decision ledger..."
+          }
+        ]
+      }
+    ]
+  }
+}
