@@ -118,6 +118,24 @@ the shortcut a hasty implementer would take and why it's wrong. /implement
 passes it verbatim to the implementer's dispatch.
 ```
 
+## Stable Identifiers & Traceability
+
+Numbered elements carry stable, per-document identifiers so artifacts can cite each other precisely and reconciliation is greppable:
+
+| Element | Id format | Lives in |
+|---|---|---|
+| Functional requirement | `FR-NN` | spec Requirements |
+| Non-functional requirement | `NFR-NN` | spec Requirements |
+| Acceptance criterion | `AC-NN` | spec Acceptance Criteria |
+| Phase / task | `N` / `N.M` | plan frontmatter (existing convention) |
+| Decision | `D-NNNN` | decision ledger |
+
+Rules:
+
+- **Ids are append-only and never renumbered.** Removing an item leaves its id retired (strike the line or note "removed — see <reason/citation>") so existing cross-references never silently re-bind to a different item.
+- **Cross-reference by id.** A plan task's `verification` (or its body section) names the `AC-NN`/`FR-NN` ids it satisfies; a design section that realizes a requirement cites its `FR-NN`; governed sections cite ledger ids (`D-NNNN`) per `shared/decision-log.md`. These citations are what make drift detectable — without them every reconciliation check is blind.
+- **Changing a numbered element is a reconciliation event**: after editing it, grep the other artifacts for its id and update or flag every citing site (same pattern as the decision ledger's supersession cascade). `/tend` completeness mode audits for unnumbered elements and dangling id citations.
+
 ## Decision Ledger Schema
 
 The decision ledger (`Decisions/decisions.md`, type `decision-log`) carries a `decisions[]` frontmatter array — the same structured-list convention as `phases[]`/`tasks[]`. Entry fields, lifecycle rules (append-only; accepted entries mutate only via `status` + `superseded_by`), the collision procedure, and distribution rules are defined in `shared/decision-log.md` — the single source of truth for this artifact.

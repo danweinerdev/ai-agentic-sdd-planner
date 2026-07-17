@@ -140,6 +140,8 @@ Invoke the `sdd-planner:researcher` agent to check each artifact against `shared
 - Plans have at least one phase defined
 - Phases have at least one task defined
 - Related links point to artifacts that exist
+- Requirements and acceptance criteria in approved-or-later specs carry stable ids (`FR-NN`/`NFR-NN`/`AC-NN`), and plan tasks cite the ids they satisfy (`shared/frontmatter-schema.md` § Stable Identifiers)
+- Id citations resolve: every cited `FR-NN`/`AC-NN`/task id exists in the artifact that owns it (a dangling citation means something was renumbered or removed without reconciliation)
 
 ## Sequential Execution
 

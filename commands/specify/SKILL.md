@@ -21,6 +21,7 @@ When you need to define the requirements for a feature before designing or imple
 2. **Draft Specification**
    - Create `Specs/<FeatureName>/README.md` using `shared/templates/spec.md`
    - Write: overview, goals, non-goals, requirements (functional + non-functional), user stories, acceptance criteria, constraints, dependencies
+   - **Number requirements and acceptance criteria with stable ids** (`FR-NN`/`NFR-NN`/`AC-NN` per `shared/frontmatter-schema.md` § Stable Identifiers) — downstream designs and plan tasks cite these ids, so they are append-only and never renumbered
    - When the spec captures an **external contract** (a third-party API, protocol, wire format, or another team's interface), pin the source: link the authoritative doc and record its version and as-of date in the spec. Downstream implementation is only allowed to derive external-contract behavior from this captured source — never from model memory — so the pin is load-bearing.
    - Set status to `draft`
 
