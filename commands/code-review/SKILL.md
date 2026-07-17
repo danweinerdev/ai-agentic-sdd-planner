@@ -233,6 +233,12 @@ Never use "pre-existing" to justify deferring or hiding a finding. "Pre-existing
 
 Never downscope a finding, recommendation, or fix by estimating how long it would take a human. Agents are not constrained by human development timelines. The right fix is right; surface it. Prefer a smaller change only when it is genuinely better on its own merits — clearer, lower risk, smaller surface area — never because a larger one would "take too long." The user decides what is worth fixing; don't pre-decide for them on time grounds.
 
+### 7. Persist the Review
+Write the unified review to a review artifact per `shared/review-artifacts.md`: `Plans/<PlanName>/reviews/<NN>-<plan-slug>-code-review-<rev>.md` from `shared/templates/review.md`, with `rev` = the reviewed repo's short revision (`-dirty` when the tree wasn't frozen). Number the consolidated findings `F-NN`, mirror them in `findings[]`, and set `status: open`. The raw sub-reports stay in the conversation; the review artifact carries the synthesized findings — the durable record.
+
+### 8. Acting on Findings
+If the user asks to address findings, follow `shared/review-artifacts.md`: mechanical fixes (fully determined by hard facts — an accepted `D-NNNN`, approved artifact text, a verifiable fact) apply directly with the fact cited; design decisions stop for user discussion and land in the decision ledger; every disposition gets a Resolution Log entry; changed numbered elements trigger the reconciliation sweep; deferred findings become plan tasks or tracked `FU-NN` follow-ups.
+
 ## Output Format
 
 ```markdown
@@ -340,9 +346,12 @@ Findings raised as unverified suspicions by one or more reviewers that couldn't 
 ```
 
 ## Output
-No new artifact is created. This skill produces an inline review presented to the user. If the user wants to record findings:
-- Significant drift or blind spots should be captured in the phase debrief (via `/debrief`)
-- Planning gaps should be addressed by updating the relevant spec, design, or plan
+```
+Plans/<PlanName>/reviews/<NN>-<plan-slug>-code-review-<rev>.md
+```
+The inline review is presented to the user; the same findings are persisted to the review artifact (step 7), which is the durable record. Beyond the Resolution Log (step 8):
+- Significant drift or blind spots should also be captured in the phase debrief (via `/debrief`)
+- Planning gaps should be addressed by updating the relevant spec, design, or plan — a reconciliation event per `shared/frontmatter-schema.md` § Stable Identifiers
 - Unresolved questions can be added as open questions in the relevant artifact
 
 ## What This Is NOT
@@ -352,6 +361,7 @@ No new artifact is created. This skill produces an inline review presented to th
 - Not a substitute for tests — assumes the test suite validates correctness independently
 
 ## Context
+- Review artifacts: `shared/review-artifacts.md` (template: `shared/templates/review.md`)
 - Orchestration: `shared/orchestration.md`
 - Project review-lane socket: `shared/review-lanes.md` (template: `shared/templates/custom-reviewer.md`)
 - Schema: `shared/frontmatter-schema.md`

@@ -89,20 +89,24 @@ Think of it as the planning-artifact counterpart to `sdd-planner:blind-spot-find
 
    Never downscope severity by estimating how long a fix would take a human. Agents are not constrained by human development timelines. Severity reflects the impact of the flaw, not the cost of the fix. The right fix is right; surface it and let the user decide.
 
-6. **Present Results**
-   Show findings grouped by severity, with specific references to the artifact sections they apply to. Each finding should include: the concrete scenario that exposes the flaw, why it matters, and a concrete mitigation or question to resolve it.
+6. **Persist the Review**
+   Write the findings to a review artifact per `shared/review-artifacts.md`: `<target-home>/reviews/<NN>-<target-slug>-adversarial-review-<rev>.md` from `shared/templates/review.md` (Plans > Designs > Specs precedence; a flat artifact with no resolvable home stays inline — say so). Number findings `F-NN`, mirror them in the `findings[]` frontmatter, cite the ids each finding impugns (`FR-NN`, `AC-NN`, task `N.M`, `D-NNNN`), and set `status: open`.
 
-7. **Offer to Update**
-   Ask the user if they want to:
-   - Update the artifact to address critical/major findings
-   - Add findings as open questions in the artifact
-   - Create a research document to investigate unknowns
-   - Proceed as-is with findings acknowledged
+7. **Present Results**
+   Show findings grouped by severity, referencing the review file. Each finding includes: the concrete scenario, why it matters, and a concrete mitigation or question to resolve.
+
+8. **Offer to Resolve**
+   Ask the user if they want to act on findings now. If yes, follow `shared/review-artifacts.md`: classify each finding (mechanical fix → apply directly citing the governing fact; design decision → present options, discuss, record the outcome in the decision ledger); append Resolution Log entries; run the reconciliation sweep for every changed numbered element; track deferred work as plan tasks or `FU-NN` entries. Other options: create a research document for unknowns (the `/research` workflow), or proceed as-is with the review left `open`.
 
 ## Output
-No new artifact is created. This skill produces an inline analysis presented to the user. If the user chooses to update the artifact, modify it in place. If a research document is needed, use the `/research` workflow.
+```
+<target-home>/reviews/<NN>-<target-slug>-adversarial-review-<rev>.md
+```
+Findings live in the review artifact, not just the conversation. If the user acts on findings, the reviewed artifact is updated in place and dispositions land in the review's Resolution Log.
 
 ## Context
+- Review artifacts: `shared/review-artifacts.md`
+- Template: `shared/templates/review.md`
 - Orchestration: `shared/orchestration.md`
 - Agent: `sdd-planner:researcher`
 

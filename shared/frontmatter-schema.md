@@ -8,7 +8,7 @@ Every artifact includes these fields (one exception: `phase` docs omit `tags` an
 
 ```yaml
 title: "Human-readable title"
-type: research | brainstorm | spec | design | plan | phase | debrief | retro | diagram | decision-log
+type: research | brainstorm | spec | design | plan | phase | debrief | retro | diagram | decision-log | review
 status: <type-specific, see below>
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
@@ -35,6 +35,7 @@ Any artifact may additionally declare an optional `refresh_when` field — a lis
 | retro | `draft`, `complete` |
 | diagram | `draft`, `active`, `archived` |
 | decision-log | `active`, `archived` |
+| review | `open`, `resolved`, `superseded` |
 
 ## Plan Schema
 
@@ -129,12 +130,20 @@ Numbered elements carry stable, per-document identifiers so artifacts can cite e
 | Acceptance criterion | `AC-NN` | spec Acceptance Criteria |
 | Phase / task | `N` / `N.M` | plan frontmatter (existing convention) |
 | Decision | `D-NNNN` | decision ledger |
+| Review finding | `F-NN` | review artifact |
+| Review follow-up | `FU-NN` | review artifact |
 
 Rules:
 
 - **Ids are append-only and never renumbered.** Removing an item leaves its id retired (strike the line or note "removed — see <reason/citation>") so existing cross-references never silently re-bind to a different item.
 - **Cross-reference by id.** A plan task's `verification` (or its body section) names the `AC-NN`/`FR-NN` ids it satisfies; a design section that realizes a requirement cites its `FR-NN`; governed sections cite ledger ids (`D-NNNN`) per `shared/decision-log.md`. These citations are what make drift detectable — without them every reconciliation check is blind.
 - **Changing a numbered element is a reconciliation event**: after editing it, grep the other artifacts for its id and update or flag every citing site (same pattern as the decision ledger's supersession cascade). `/tend` completeness mode audits for unnumbered elements and dangling id citations.
+
+## Review Artifact Schema
+
+A review artifact (`<target-home>/reviews/…`, type `review`) carries `findings[]` and `followups[]` frontmatter arrays — the machine layer for review tracking. Entry fields, location/naming, the Resolution Log, disposition rules, and follow-up tracking are defined in `shared/review-artifacts.md` — the single source of truth for this artifact.
+
+Per-finding statuses (entry-level, not artifact statuses): `open`, `fixed`, `deferred`, `rejected`, `answered`. The artifact is `resolved` only when no finding is `open`; `superseded` links to the newer review of the same target.
 
 ## Decision Ledger Schema
 

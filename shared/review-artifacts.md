@@ -1,0 +1,86 @@
+# Review Artifacts
+
+Single source of truth for **persisted review artifacts** — the durable, trackable record of adversarial and code reviews. Every `/poke-holes` and `/code-review` run writes its findings to a review file instead of leaving them in conversation scrollback, and every finding is driven to an explicit disposition in a Resolution Log. Findings that live only in a chat transcript get lost; findings with ids in a tracked file do not.
+
+## Location — reviews live with what they review
+
+Precedence: **Plans > Designs > Specs.** The review file goes in a `reviews/` directory beside the reviewed artifact's README:
+
+| Reviewed material | Review home |
+|---|---|
+| Implementation vs a plan (`/code-review`) | `Plans/<Plan>/reviews/` |
+| A plan or phase (`/poke-holes`) | `Plans/<Plan>/reviews/` |
+| A design | `Designs/<Component>/reviews/` |
+| A spec | `Specs/<Feature>/reviews/` |
+| A flat artifact (brainstorm, research) | the nearest governed home via its `related` frontmatter (one hop, same precedence); if none resolves, present findings inline and say the review was not persisted |
+
+Create the `reviews/` directory on first use (with a `.gitkeep`-style placeholder only if the VCS needs one).
+
+## Naming
+
+```
+<NN>-<target-slug>-<review-type>-<rev>.md
+```
+
+- `NN` — next zero-padded sequence number within that `reviews/` directory.
+- `target-slug` — lowercase kebab-case of the reviewed artifact (plan/design/spec name).
+- `review-type` — `adversarial-review` (`/poke-holes`) or `code-review`.
+- `rev` — the state the review examined: for `/code-review`, the reviewed repo's VCS short revision (append `-dirty` when the tree wasn't frozen); for `/poke-holes`, the planning root's short revision, falling back to `YYYY-MM-DD` when the planning root isn't versioned.
+
+Example: `01-arkagent-adversarial-review-a1b2c3d.md`.
+
+## File Format
+
+Template: `shared/templates/review.md`. Frontmatter is type `review` with a machine-readable `findings[]` array (same structured-list convention as `phases[]`/`tasks[]`/`decisions[]`):
+
+```yaml
+findings:
+  - id: F-01                 # stable within this file; never renumbered
+    severity: critical       # critical | major | minor | question
+    title: "One-line finding"
+    status: open             # open | fixed | deferred | rejected | answered
+```
+
+The body carries one section per finding — the concrete scenario, why it matters, the recommended mitigation, and the artifact/code ids it impugns (`FR-NN`, `AC-NN`, task `N.M`, `D-NNNN`) — followed by the Resolution Log.
+
+Artifact `status`: `open` while any finding is `open`; `resolved` when every finding has a terminal disposition; `superseded` when a newer review of the same target replaces it (link both ways, like ledger supersession).
+
+## Resolution Log
+
+When findings are acted on, append (never rewrite) entries under `## Resolution Log` at the bottom of the review file, one per finding disposition:
+
+```markdown
+### F-03 — fixed (2026-07-17)
+Split task 2.4's migration into its own task 2.7 with a rollback step.
+Governing fact: AC-04 requires zero-downtime cutover. Commit: abc1234.
+```
+
+- Every entry states **what was decided, what was done**, and — for `deferred`/`rejected` — **why**. Cite the governing facts by id (`D-NNNN`, `FR-NN`, `AC-NN`, task ids, commits).
+- Update the finding's `status` in `findings[]` to match; the frontmatter is the machine layer, the log entry is the narrative.
+- Dispositions: `fixed` (change applied), `deferred` (tracked follow-up — see below), `rejected` (won't fix, rationale required), `answered` (a question resolved; if the answer constrains future work, it belongs in the decision ledger too).
+
+## Acting on findings — the disposition rules
+
+Classify each finding before touching anything:
+
+- **Mechanical fix — apply directly.** The correction is fully determined by *hard facts*: an `accepted` decision-ledger entry, the explicit text of an approved spec/design/plan, or an objectively verifiable fact (a path exists, a command's output, a pinned external contract). No judgment call remains. Apply the fix, cite the governing fact in the Resolution Log entry. This is a template-following write per `shared/autonomy.md` — no user stop.
+- **Design decision — stop and discuss.** The fix requires choosing between viable approaches, changes the meaning or scope of an approved artifact, or touches anything an accepted ledger entry governs (or would supersede one). Present the options with trade-offs and let the user decide. Record the outcome in the decision ledger per `shared/decision-log.md` (collision check; a fresh answer colliding with an accepted entry uses one-step supersession), then execute and log the resolution citing the new `D-NNNN`.
+- **When the bucket is ambiguous, treat it as a design decision.** A false stop costs one confirmation; a wrongly-autonomous "fix" silently forks the truth.
+
+## Reconciliation — after fixes land
+
+A resolution that edits a numbered element (`FR-NN`, `AC-NN`, a task, a governed section) is a **reconciliation event** per `shared/frontmatter-schema.md` § Stable Identifiers: grep the other artifacts for the changed id and update or flag every citing site. Spec, design, plan, and phase docs must agree before the review is marked `resolved` — a fix applied to one artifact while its citations elsewhere still describe the old behavior is drift, not resolution.
+
+## Follow-ups never float
+
+`deferred` is only a valid disposition when the work is **tracked**: add it as a plan task (new task id, normal `verification` field) in the relevant phase — or, when no plan exists yet, record it in the review frontmatter as a follow-up entry:
+
+```yaml
+followups:
+  - id: FU-01
+    finding: F-05
+    summary: "Add backpressure test for the retry path"
+    tracked_in: ""        # filled with the task id (e.g. "3.4") once planned; empty = not yet landed
+```
+
+A review with any `followups[]` entry whose `tracked_in` is empty is not fully resolved — it may be `resolved` only if the user explicitly accepts the floating follow-up, and `/tend` keeps flagging it until it lands in a plan. This is the net that keeps implementation follow-ups from getting lost.

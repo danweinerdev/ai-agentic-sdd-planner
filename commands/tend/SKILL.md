@@ -100,6 +100,8 @@ Invoke the `sdd-planner:researcher` agent to scan all plans under `Plans/` and c
 - Specs/designs marked `approved` but their plan is `complete` → suggest `implemented`
 - Research/brainstorm still `active` but frontmatter `updated` more than 30 days before today → flag as potentially stale
 - Phase status `in-progress` but no task has started → flag inconsistency
+- Review artifacts (`reviews/` dirs, type `review`) still `open` whose target has since moved forward (spec/design approved, plan phase complete) → the findings were either addressed without Resolution Log entries or silently dropped; flag for resolution or explicit supersession
+- Review `followups[]` entries with an empty `tracked_in` → floating follow-up work; flag until it lands as a plan task
 
 **Refresh triggers**: Artifacts may declare an optional `refresh_when` frontmatter field — a list of event-shaped trigger descriptions (e.g., "dependency X ships v3", "Specs/Payments changes", "the vendor answers the webhooks question"). For artifacts that declare it: report each artifact with its triggers and ask the user which (if any) have fired — fired triggers make the artifact stale regardless of its `updated` date, and an artifact whose triggers have all demonstrably not fired is NOT stale even past 30 days. Artifacts without `refresh_when` keep the 30-day rule above. Where a trigger names another artifact (e.g., "Specs/Payments changes"), check that artifact's `updated` date yourself instead of asking.
 
